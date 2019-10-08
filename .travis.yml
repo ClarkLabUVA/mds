@@ -1,0 +1,28 @@
+language: go
+
+go:
+        - 1.13
+ 
+before_install:
+        - sudo apt-get update
+        - sudo apt-get install
+
+install:
+        - go get -v github.com/gorilla/mux
+        - go get -v github.com/urfave/negroni
+        - go get -v github.com/stori/go.uuid
+        - go get -v go.mongodb.org/mongo-driver/bson
+        - go get -v go.mongodb.org/mongo-driver/mongo
+        - go get -v github.com/dgrijalva/jwt-go
+        
+script:
+        go test .
+
+after_success:
+        - set -e
+        - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
+        - REPO=jackofsum/ors-mds
+        - GIT_SHA=$(git rev-parse --short HEAD);
+        - docker build -f Dockerfile -t $REPO:$GIT_SHA .;
+        - docker push $REPO:$GIT_SHA;
+
