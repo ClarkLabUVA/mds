@@ -16,7 +16,7 @@ install:
         - go get -v github.com/dgrijalva/jwt-go
         
 script:
-        go test .
+        go test -run General .
 
 after_success:
         - set -e
