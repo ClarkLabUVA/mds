@@ -1,5 +1,7 @@
 package main
 
+err
+
 import (
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
