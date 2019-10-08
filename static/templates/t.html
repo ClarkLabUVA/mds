@@ -1,0 +1,423 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="shortcut icon" href="favicon.ico" type="image/png">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Muli&display=swap" rel="stylesheet">
+
+  <style>
+
+    header {
+      font-family: 'Raleway', sans-serif;
+    }
+
+    header h1 {
+      font-size: 45;
+      display: inline;
+      padding-right: 30px;
+    }
+
+    header a {
+      font-size: 25;
+      color: black;
+      text-decoration: none;
+    }
+
+    header a:hover {
+      color: white;
+      background: black;
+    }
+
+
+    header ul {
+      list-style-type: none;
+      text-align: left;
+      margin: 0;
+      padding: 0px;
+    }
+
+    header li {
+      display: inline-block;
+      padding-right: 5%;
+    }
+
+    header form {
+      display: inline;
+    }
+
+
+    header input[type=text] {
+
+      font-family: 'Raleway', sans-serif;
+      border: none;
+      text-align: center;
+      margin: 0;
+      padding: 0px;
+      border-bottom: 0.5px solid grey;
+    }
+
+    header input[type=submit] {
+
+      font-family: 'Raleway', sans-serif;
+      text-decoration: none;
+      border: none;
+    }
+
+    header input[type=submit]:hover {
+      background-color: black;
+      color: white;
+    }
+
+
+    body {
+      font-family: 'Raleway', sans-serif;
+    }
+
+  .grid-container {
+    display: grid;
+    grid-column-gap: 20px;
+    grid-row-gap: 20px;
+    grid-template-columns: 10% auto auto auto 10%;
+    grid-template-rows: 75px auto auto auto auto 50px;
+  }
+
+  .col-container {
+    display: flex
+    flex-direction: column
+  }
+
+  .row-container {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .row {
+    padding: 10px;
+  }
+
+  .row-item {
+    flex-grow: 1;
+    align-self: center;
+    display: flex;
+    flex-direction: row;
+  }
+
+  .col-container {
+  }
+
+
+  .key1 {
+    padding: 10px;
+    padding-right: 50px;
+    font-wieght: bold;
+    font-size: 1.5em;
+    text-align: justify;
+    line-height: 1.25 em;
+  }
+
+  .value1 {
+    padding: 10px;
+    font-size: 1.25em;
+    letter-spacing: .03em;
+    line-height: 1.25 em;
+    text-align: justify;
+  }
+
+  .b {
+    background-color: rgba(174, 141, 141, 0.24);
+  }
+
+  .key2 {
+    font-family: 'Raleway', sans-serif;
+    padding: 10px;
+    font-wieght: bold;
+    font-size: 1.25em;
+    text-align: justify;
+    line-height: 1.25 em;
+  }
+
+  .value2 {
+    padding: 10px;
+    font-size: 1.25em;
+    letter-spacing: .03em;
+    line-height: 1.25 em;
+    text-align: justify;
+  }
+
+  .grid-top-center {
+    grid-row: 2/3;
+    grid-column: 2/5;
+  }
+
+  .landing-title {
+    align-content: center;
+    text-align: center;
+    font-size: 2em;
+    letter-spacing: .05em;
+  }
+
+
+  .landing-heading {
+    align-content: center;
+    text-align: center;
+    font-size: 1.5em;
+    letter-spacing: .05em;
+  }
+
+
+  </style>
+</head>
+
+<header>
+
+      <ul>
+
+        <li>
+          <h1>ORS+</h1>
+        </li>
+
+        <li>
+          <a href="/about">About</a>
+        </li>
+
+        <li>
+          <a href="/doc">Documentation</a>
+        </li>
+
+        <li>
+          <a href="/swagger">OpenAPI</a>
+        </li>
+
+        <li>
+          <a href="/oauth/authorize">Login</a>
+        </li>
+
+        <li>
+          <form action="/search" type="submit">
+            <input type="text" id="query" placeholder="Full Text Search">
+            <input type="submit" value="Search">
+          </form>
+        </li>
+      </ul>
+
+
+</header>
+
+
+<body>
+
+  <div class="grid-container">
+    <div class="grid-top-center">
+
+      <div class="row-item">
+        <div class="landing-title" style="flex-grow: 1;">
+            Landing
+            <hr>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      {{ range $k, $v := .Metadata }}
+      <div>
+        <div> {{$k}} </div>
+        {{ if IsString $v }}
+        <div> {{$v}} </di>
+        {{ end }}
+
+        {{ if IsSlice $v }}
+        {{ end }}
+
+        {{ if IsMap $v }}
+          {{range $k2, $v2 := $v}}
+          <div>{{$k2}}</div>
+          <div>{{$v2}}</div>
+          {{end}}
+        {{end }}
+
+
+      </div>
+      {{ end }}
+    </div>
+
+
+
+    <div style="grid-row: 3/4; grid-column: 2/5;">
+      <div class="row-item row">
+        <div class="key1"> Name: </div>
+        <div class="value1"> Replication Data for: Cardiorespiratory dynamics measured from continuous ECG monitoring improves detection of deterioration in acute care patients: A retrospective cohort study  </div>
+      </div>
+
+      <div class="row-item row b">
+        <div class="key1"> Description: </div>
+        <div class="value1">
+            The data set (“moss_plos_one_data.tab”) represents the 63 patient-years of data of 8,105 acute care patients admitted to a tertiary care academic medical center.  The every-15-minute incremental observations include commonly measured vital signs and laboratory results from the electronic medical record (EMR) and calculations from continuous ECG monitoring.  Values beyond the scale of the laboratory result were assigned the lowest recorded value (e.g. troponin I < 0.02 would be assigned a value 0.02, rather than 0 or missing).  To impute missing values of measurements from the EMR, we carried the last value forward for up to 24 hours for charted vital signs and for up to 48 hours for laboratory results; thereafter we imputed median values.  From the continuous ECG record, we made observations every 15 minutes of the preceding 30 minutes and calculated the mean interbeat interval, the standard deviation or heart rate variability, and nonlinear dynamics of hear rate.  From these measurements, we used a previously validated algorithm to detect the presence of atrial fibrillation.
+        </div>
+      </div>
+
+      <div class="row-item row">
+        <div class="key1"> Author: </div>
+        <div class="col-container">
+          <div class="row-item" >
+            <div class="key2"> name: </div>
+            <div class="value2"> Douglas Lake </div>
+          </div>
+
+          <div class="row-item">
+            <div class="key2"> email: </div>
+            <div class="value2"> dlake@example.org </div>
+          </div>
+
+          <div class="row-item">
+            <div class="key2">id:</div>
+            <div class="value2">orcid:0000-0002-1102-3883</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div> </div>
+        <div> </div>
+      </div>
+
+      <div class="row-item row b">
+        <div class="key1"> IsPartOf: </div>
+        <div class="col-container">
+          <div class="row-item">
+            <div class="key2">name:</div>
+            <div class="value2"> CWL Replication Project </div>
+          </div>
+          <div class="row-item">
+            <div class="key2">type:</div>
+            <div class="value2">Project</div>
+          </div>
+          <div class="row-item">
+            <div class="key2">guid:</div>
+            <div class="value2"> http://ors.uvadcos.io/ark:99999/repl.moss.2017 </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row-item row ">
+        <div class="key1"> Distribution: </div>
+
+        <div class="col-container">
+
+          <div class="row-item">
+            <div class="key2">name:</div>
+            <div class="value2">moss_plos_one_data.tab</div>
+          </div>
+
+          <div class="row-item">
+            <div class="key2">guid:</div>
+            <div class="value2">ark:99999/colter/jq98 </div>
+          </div>
+
+          <div class="row-item">
+            <div class="key2">contentUrl:</div>
+            <div class="value2">http://ors.uvadcos.io/dataset/ark:99999/colter/jq98</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div style="grid-row: 4/5; grid-column: 2/5;">
+      <div class="landing-heading">
+        Related Publications
+        <hr>
+      </div>
+
+      <div>
+        <div> GUID: </div>
+        <div> https://doi.org/10.1371/journal.pone.0181448 </div>
+      </div>
+
+      <div>
+        <div>Type:</div>
+        <div>ScholarlyArticle</div>
+      </div>
+
+      <div>
+        <div> Name: </div>
+        <div>
+          Cardiorespiratory dynamics measured from continuous ECG monitoring improves detection of deterioration in acute care patients: A retrospective cohort study
+        </div>
+      </div>
+
+      <div>
+        <div> Publisher: </div>
+        <div>  </div>
+      </div>
+
+      <div>
+        <div> DatePublished: </div>
+        <div> August 3 2017 </div>
+      </div>
+
+      <div>
+        <div> Abstract: </div>
+        <div>
+          Background <br>
+          Charted vital signs and laboratory results represent intermittent samples of a patient’s dynamic physiologic state and have been used to calculate early warning scores to identify patients at risk of clinical deterioration. We hypothesized that the addition of cardiorespiratory dynamics measured from continuous electrocardiography (ECG) monitoring to intermittently sampled data improves the predictive validity of models trained to detect clinical deterioration prior to intensive care unit (ICU) transfer or unanticipated death. <br>
+          Methods and findings <br>
+          We analyzed 63 patient-years of ECG data from 8,105 acute care patient admissions at a tertiary care academic medical center. We developed models to predict deterioration resulting in ICU transfer or unanticipated death within the next 24 hours using either vital signs, laboratory results, or cardiorespiratory dynamics from continuous ECG monitoring and also evaluated models using all available data sources. We calculated the predictive validity (C-statistic), the net reclassification improvement, and the probability of achieving the difference in likelihood ratio χ2 for the additional degrees of freedom. The primary outcome occurred 755 times in 586 admissions (7%). We analyzed 395 clinical deteriorations with continuous ECG data in the 24 hours prior to an event. Using only continuous ECG measures resulted in a C-statistic of 0.65, similar to models using only laboratory results and vital signs (0.63 and 0.69 respectively). Addition of continuous ECG measures to models using conventional measurements improved the C-statistic by 0.01 and 0.07; a model integrating all data sources had a C-statistic of 0.73 with categorical net reclassification improvement of 0.09 for a change of 1 decile in risk. The difference in likelihood ratio χ2 between integrated models with and without cardiorespiratory dynamics was 2158 (p value: <0.001).\nConclusions\nCardiorespiratory dynamics from continuous ECG monitoring detect clinical deterioration in acute care patients and improve performance of conventional models that use only laboratory results and vital signs.
+        </div>
+      </div>
+
+    <div>
+      <div>  </div>
+    </div>
+
+    </div>
+
+    <div style="grid-row:5/6; grid-column: 2/5;">
+      <div class="landing-heading">
+        Provenance
+        <hr>
+      </div>
+
+      <div>
+        <div> GeneratedBy: </div>
+        <div>  </div>
+      </div>
+
+      <div>
+        <div> IsBasedOn: </div>
+        <div>  </div>
+      </div>
+
+      <div>
+        <div> SameAs: </div>
+        <div>  </div>
+      </div>
+
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+  <script>
+  </script>
+
+</body>
+
+<footer>
+</footer>
+
+</html>

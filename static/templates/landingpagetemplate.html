@@ -1,0 +1,191 @@
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="shortcut icon" href="favicon.ico" type="image/png">  
+
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <style>
+
+  header {
+    font-family: 'Raleway', sans-serif;
+/*    border-bottom: 2px solid grey;*/
+  }
+
+  header h1 {
+    font-size: 45;
+    display: inline;
+    padding-right: 30px;
+  }
+
+  header a {
+    font-size: 25;
+    color: black;
+    text-decoration: none;
+  }
+
+  header a:hover {
+    color: white;
+    background: black;
+  }
+
+
+  header ul {
+    list-style-type: none;
+    text-align: left;
+    margin: 0;
+    padding: 0px;
+  }
+
+
+
+  header li {
+    display: inline-block;
+    padding-right: 5%;
+  }
+
+  header form {
+    display: inline;
+  }
+
+
+  header input[type=text] {
+
+    font-family: 'Raleway', sans-serif;
+    border: none;
+    text-align: center;
+    margin: 0;
+    padding: 0px;
+    border-bottom: 0.5px solid grey;
+  }
+
+  header input[type=submit] {
+
+    font-family: 'Raleway', sans-serif;
+    text-decoration: none;
+    border: none;
+  }
+
+  header input[type=submit]:hover {
+    background-color: black;
+    color: white;
+  }
+
+  </style>
+</head>
+
+<header>
+
+      <ul>
+
+        <li>
+          <h1>ORS+</h1>
+        </li>
+
+        <li>
+          <a href="/about">About</a>
+        </li>
+
+        <li>
+          <a href="/doc">Documentation</a>
+        </li>
+
+        <li>
+          <a href="/swagger">OpenAPI</a>
+        </li>
+
+        <li>
+          <a href="/oauth/authorize">Login</a>
+        </li>
+
+        <li>
+          <form action="/search" type="submit">
+            <input type="text" id="query" placeholder="Full Text Search">
+            <input type="submit" value="Search">
+          </form>
+        </li>
+      </ul>
+
+
+</header>
+
+
+<body>
+
+        <head>
+                <style>
+                    #customers {
+                        font-family: "'Raleway'";
+                        border-collapse: collapse;
+                        width: 70%;
+                        margin-left:15%;
+                        margin-right:15%;
+                    }
+                    #customers caption{
+                        padding-top: 50px;
+                        font-size: 32px;
+                        font-weight: bold;
+                    }
+
+                    #customers td, #customers th {
+                        border: 1px solid #ddd;
+                        padding: 8px;
+                    }
+
+                    #customers tr:nth-child(even){background-color: #f2f2f2;}
+
+                    #customers tr:hover {background-color: rgb(235, 228, 26);}
+
+                    #customers th {
+                        border: 0px solid #ddd;
+                        padding-top: 32px;
+                        font-size: 32px;
+                        font-weight: bold;
+                        padding-bottom: 12px;
+                        text-align: center;
+                        background-color: rgb(0, 0, 0);
+                        color: white;
+                    }
+                </style>
+            </head>
+            <table id="customers">
+                <caption>Metadata</caption>
+                <th></th>
+                <th></th>
+                <th></th>
+            {{range $k, $v := .}}
+            <tr>
+                <td>{{$k}}</td>
+                {{ if IsString $v}}
+                <td>{{$v}}</td>
+                <td></td>
+                {{end}}
+                {{ if IsSlice $v}}
+                <td>{{$v}}</td>
+                <td></td>
+                {{end}}
+                {{ if IsMap $v}}
+                {{range $k2,$v2 := $v}}
+                <tr>
+                    <td></td>
+                    <td>{{$k2}}</td>
+                    <td>{{$v2}}</td>
+                </tr>
+                {{end}}
+                {{end}}
+            </tr>
+            {{end}}
+
+</body>
+
+<footer>
+</footer>
+
+</html>
