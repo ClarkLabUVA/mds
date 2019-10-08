@@ -183,6 +183,7 @@ func CreateIdentifier(payload []byte, guid string, author User) (err error) {
 
 }
 
+
 func GetIdentifier(guid string) (response []byte, err error) {
 
 	record, err := MS.FindOne(bson.D{{"_id", guid}}, COL)
