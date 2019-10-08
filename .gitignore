@@ -1,0 +1,6 @@
+mds
+.DS_Store
+deprecated/*
+./ipynb_checkpoints/*
+*.ipynb
+notes.md
