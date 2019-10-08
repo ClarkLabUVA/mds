@@ -15,7 +15,7 @@ import (
 )
 
 var MS = MongoServer{
-	URI:	"mongodb://mongoadmin:mongosecret@localhost:27017",
+	URI:      "mongodb://mongoadmin:mongosecret@localhost:27017",
 	Database: "ors",
 }
 
@@ -25,7 +25,6 @@ func init() {
 	if exists {
 		MS.URI = mongoURI
 	}
-
 
 	mongoDB, exists := os.LookupEnv("MONGO_DB")
 	if exists {

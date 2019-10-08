@@ -1,9 +1,9 @@
 package main
 
 import (
-	"testing"
 	bson "go.mongodb.org/mongo-driver/bson"
 	"reflect"
+	"testing"
 )
 
 func TestGeneralNested(t *testing.T) {
@@ -24,7 +24,7 @@ func TestGeneralNested(t *testing.T) {
 		t.Fatal("dotted.$set is unset: ", val)
 	}
 
-	if  reflect.ValueOf(val).Kind() != reflect.Map {
+	if reflect.ValueOf(val).Kind() != reflect.Map {
 		t.Fatal("dotted.$set is not a map", val)
 	}
 
@@ -35,6 +35,7 @@ func TestGeneralNested(t *testing.T) {
 }
 
 func TestMongoUpdate(t *testing.T) {
+	//TODO attempt to ping mongo
 	guid := "ark:99999/test"
 	namespace := []byte(`{"name": "test namespace", "@type": "namespace"}`)
 	docBytes := []byte(`{"id": "t", "nested": {"doc": {"id": "init", "other": "props"}, "other": "props"} }`)
@@ -45,7 +46,6 @@ func TestMongoUpdate(t *testing.T) {
 
 	// create identifier
 	CreateIdentifier(docBytes, guid, User{})
-
 
 	// update identifier
 	_, err := UpdateIdentifier(guid, update)
@@ -60,7 +60,6 @@ func TestMongoUpdate(t *testing.T) {
 		DeleteIdentifier(guid)
 		t.Fatal("Failed to Get Identifier: ", err)
 	}
-
 
 	// delete the identifier
 	DeleteIdentifier(guid)

@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	bson "go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
-	"time"
 	"reflect"
-	"errors"
 	"strings"
+	"time"
 )
 
 var ErrInvalidMetadata = errors.New("Metadata Document is Invalid")
@@ -19,7 +19,6 @@ var ErrMissingProp = errors.New("Instance is missing required properties")
 var COL = "ids"
 
 func CreateNamespace(payload []byte, guid string) (err error) {
-
 	ns := make(map[string]interface{})
 	err = json.Unmarshal(payload, &ns)
 
@@ -49,7 +48,6 @@ func CreateNamespace(payload []byte, guid string) (err error) {
 }
 
 func GetNamespace(guid string) (response []byte, err error) {
-
 	ns, err := MS.FindOne(bson.D{{"_id", guid}}, "ids")
 
 	if err != nil {
@@ -62,7 +60,6 @@ func GetNamespace(guid string) (response []byte, err error) {
 }
 
 func UpdateNamespace(payload []byte, guid string) (response []byte, err error) {
-
 	updateBSON, err := bson.MarshalExtJSON(payload, false, false)
 
 	if err != nil {
@@ -76,7 +73,6 @@ func UpdateNamespace(payload []byte, guid string) (response []byte, err error) {
 
 	response, err = json.Marshal(raw)
 	return
-
 }
 
 func DeleteNamespace(guid string) (response []byte, err error) {
@@ -86,7 +82,6 @@ func DeleteNamespace(guid string) (response []byte, err error) {
 }
 
 func processMetadataWrite(metadata map[string]interface{}, guid string, author User) map[string]interface{} {
-
 	// set @id
 	metadata["@id"] = guid
 	metadata["_id"] = guid
@@ -120,7 +115,6 @@ func processMetadataWrite(metadata map[string]interface{}, guid string, author U
 	}
 
 	return metadata
-
 }
 
 // unmarshal BSON record to JSON
@@ -128,7 +122,6 @@ func processMetadataWrite(metadata map[string]interface{}, guid string, author U
 // - full urls for identifiers
 // - pops _id
 func processMetadataRead(metadata map[string]interface{}) map[string]interface{} {
-
 	// del _id
 	delete(metadata, "_id")
 
@@ -143,7 +136,6 @@ func processMetadataRead(metadata map[string]interface{}) map[string]interface{}
 // - Mongo.deleteOne
 // - Stardog.deleteOne
 func CreateIdentifier(payload []byte, guid string, author User) (err error) {
-
 	guidSplit := strings.Split(guid, "/")
 	_, err = GetNamespace(guidSplit[0])
 
@@ -180,12 +172,9 @@ func CreateIdentifier(payload []byte, guid string, author User) (err error) {
 	}
 
 	return
-
 }
 
-
 func GetIdentifier(guid string) (response []byte, err error) {
-
 	record, err := MS.FindOne(bson.D{{"_id", guid}}, COL)
 
 	if err != nil {
@@ -195,14 +184,12 @@ func GetIdentifier(guid string) (response []byte, err error) {
 	response, err = json.Marshal(processMetadataRead(record))
 
 	return
-
 }
 
 // TODO: Delete Behavior based on creativeWorkStatus
 //DRAFT -> remove the document
 //PUBLIC|PRIVATE -> status becomes WITHDRAWN
 func DeleteIdentifier(guid string) (response []byte, err error) {
-
 	record, err := MS.DeleteOne(bson.D{{"_id", guid}}, COL)
 
 	if err != nil {
@@ -225,7 +212,6 @@ func DeleteIdentifier(guid string) (response []byte, err error) {
 // PUBLIC -> PRIVATE|DRAFT
 // PRIVATE -> DRAFT
 func UpdateIdentifier(guid string, update []byte) (response []byte, err error) {
-
 	// unmarshal bson in to Bson.D
 	var updateD bson.D
 	err = bson.Unmarshal(nestedUpdate(update), &updateD)
@@ -240,17 +226,14 @@ func UpdateIdentifier(guid string, update []byte) (response []byte, err error) {
 
 	response, err = bson.MarshalExtJSON(raw, false, false)
 	return
-
 }
 
-
 type tuple struct {
-	Key string
+	Key   string
 	Value interface{}
 }
 
-func nestedUpdate(update []byte) (bsonUpdate []byte){
-
+func nestedUpdate(update []byte) (bsonUpdate []byte) {
 	processedMap := make(map[string]interface{})
 	updateMap := make(map[string]interface{})
 	json.Unmarshal(update, &updateMap)
@@ -260,22 +243,20 @@ func nestedUpdate(update []byte) (bsonUpdate []byte){
 
 	for {
 		select {
-			case elem := <-resChan:
-				processedMap[elem.Key] = elem.Value
-			default:
-				close(resChan)
-				bsonUpdate, _ = bson.Marshal(
-					map[string]interface{}{
-						"$set": processedMap,
-					})
-				return
+		case elem := <-resChan:
+			processedMap[elem.Key] = elem.Value
+		default:
+			close(resChan)
+			bsonUpdate, _ = bson.Marshal(
+				map[string]interface{}{
+					"$set": processedMap,
+				})
+			return
 		}
 	}
-
 }
 
 func dotConvert(base string, input map[string]interface{}, res chan tuple) {
-
 	for key, val := range input {
 		var newBase string
 		if base == "" {
@@ -287,14 +268,13 @@ func dotConvert(base string, input map[string]interface{}, res chan tuple) {
 			dotConvert(newBase, val.(map[string]interface{}), res)
 		} else {
 			//log.Println("$set: ", newBase, " ", val)
-			res<-tuple{Key: newBase, Value: val}
+			res <- tuple{Key: newBase, Value: val}
 		}
 	}
 
 	return
 
 }
-
 
 type User struct {
 	ID    string `json:"@id" bson:"_id"`

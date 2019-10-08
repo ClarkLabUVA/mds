@@ -30,10 +30,9 @@ import (
 */
 
 type MongoServer struct {
-	URI	string
+	URI      string
 	Database string
 }
-
 
 func (ms MongoServer) connect() (ctx context.Context, cancel context.CancelFunc, client *mongo.Client, err error) {
 
