@@ -7,7 +7,7 @@ RUN go get go.mongodb.org/mongo-driver/mongo \
   github.com/dgrijalva/jwt-go
 
 WORKDIR /mds
-COPY ./src /go/src
+COPY . /go/src/mds
 
 RUN go build -o main mds
 
