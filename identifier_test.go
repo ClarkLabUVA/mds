@@ -2,11 +2,39 @@ package main
 
 import (
 	"testing"
+	bson "go.mongodb.org/mongo-driver/bson"
+	"reflect"
 )
 
+func TestGeneralNested(t *testing.T) {
+	inputUpdate := []byte(`{"hello":{"world": {"goodnight": "moon"} } }`)
+	bsonUpdate := nestedUpdate(inputUpdate)
 
-func TestUpdateguid(t *testing.T) {
+	var dotted map[string]interface{}
+	err := bson.Unmarshal(bsonUpdate, &dotted)
+	if err != nil {
+		t.Fatal("Failed to unmarshal update in dot notation", err)
+	}
 
+	t.Logf("Unmarshaled Map: %+v", dotted)
+
+	val, ok := dotted["$set"]
+
+	if !ok {
+		t.Fatal("dotted.$set is unset: ", val)
+	}
+
+	if  reflect.ValueOf(val).Kind() != reflect.Map {
+		t.Fatal("dotted.$set is not a map", val)
+	}
+
+	if moon := val.(map[string]interface{})["hello.world.goodnight"]; moon != "moon" {
+		t.Fatal("Iincorrect Value Set: ", moon)
+	}
+
+}
+
+func TestMongoUpdate(t *testing.T) {
 	guid := "ark:99999/test"
 	namespace := []byte(`{"name": "test namespace", "@type": "namespace"}`)
 	docBytes := []byte(`{"id": "t", "nested": {"doc": {"id": "init", "other": "props"}, "other": "props"} }`)
