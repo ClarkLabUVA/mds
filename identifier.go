@@ -18,10 +18,15 @@ var ErrMissingProp = errors.New("Instance is missing required properties")
 
 var COL = "ids"
 
-var s = StardogServer{URI: "http://stardog.uvadcos.io",
+var Stardog = StardogServer{URI: "http://stardog.uvadcos.io",
 	Password: "admin",
 	Username: "admin",
 	Database: "testing",
+}
+
+var MS = MongoServer{
+	URI:      "mongodb://mongoadmin:mongosecret@localhost:27017",
+	Database: "ors",
 }
 
 func CreateNamespace(payload []byte, guid string) (err error) {
@@ -161,7 +166,7 @@ func CreateIdentifier(payload []byte, guid string, author User) (err error) {
 	// validate identifier metadata
 
 	// add to stardog
-	err = s.AddIdentifier(payload)
+	err = Stardog.AddIdentifier(payload)
 	if err != nil {
 		return
 	}
@@ -211,7 +216,7 @@ func DeleteIdentifier(guid string) (response []byte, err error) {
 	response, err = json.Marshal(record)
 
 	// remove identifier from stardog
-	err = s.RemoveIdentifier(response)
+	err = Stardog.RemoveIdentifier(response)
 
 	//response = processMetadataRead(response)
 
