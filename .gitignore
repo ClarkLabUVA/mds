@@ -3,4 +3,5 @@ mds
 deprecated/*
 ./ipynb_checkpoints/*
 *.ipynb
+bin/*
 notes.md
