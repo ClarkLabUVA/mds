@@ -34,6 +34,7 @@ func TestGeneralNested(t *testing.T) {
 
 }
 
+
 func TestMongoUpdate(t *testing.T) {
 	//TODO attempt to ping mongo
 	guid := "ark:99999/test"
@@ -66,16 +67,112 @@ func TestMongoUpdate(t *testing.T) {
 	t.Logf("Found Identifier: %+v", string(res))
 }
 
-func TestNamespaceCreate(t *testing.T) {}
 
-func TestNamespaceGet(t *testing.T) {}
+func TestNamespace(t *testing.T) {
 
-func TestNamespaceUpdate(t *testing.T) {}
+	t.Run("Create", func(t *testing.T){
+		namespace := []byte(`{
+			"@id": "ark:99999",
+			"@context": {"@vocab": "http://schema.org/"},
+			"name": "test namespace"
+		}`)
 
-func TestIdentifierCreate(t *testing.T) {}
+		err := CreateNamespace(namespace, "ark:99999")
 
-func TestIdentifierGet(t *testing.T) {}
+		if err != nil {
+			t.Fatalf("Create Namespace Failed: %s", err.Error())
+		}
+	})
 
-func TestIdentifierDelete(t *testing.T) {}
+	//t.Run("Update", func(t *testing.T){})
 
-func TestUpdateIdentifier(t *testing.T) {}
+	t.Run("Get", func(t *testing.T){
+		response, err := GetNamespace("ark:99999")
+
+		if err != nil {
+			t.Fatalf("Failed to Get Namespace: %s", err.Error())
+		}
+
+		t.Logf("Got Namespace: %s", string(response))
+	})
+
+	t.Run("Delete", func(t *testing.T){
+		response, err := DeleteNamespace("ark:99999")
+
+		if err != nil {
+			t.Fatalf("Failed to Delete Namespace: %s", err.Error())
+		}
+
+		t.Logf("Delete Namespace: %s", string(response))
+	})
+
+}
+
+
+func TestIdentifier(t *testing.T) {
+
+	namespace := "ark:90909"
+	namespace_payload := []byte(`{
+		"@context": {"@vocab": "http://schema.org/"},
+		"name": "test namespace"
+	}`)
+
+	err := CreateNamespace(namespace_payload, namespace)
+
+	if err != nil {
+		t.Fatalf("Create Namespace Failed: %s", err.Error())
+	}
+
+	guid := "ark:90909/test"
+	payload := []byte(`{
+		"@context": {"@vocab": "http://schema.org/"},
+		"name": "TestID",
+		"@type": "Dataset"
+	}`)
+
+	t.Run("Create", func(t *testing.T) {
+			var u User
+			err := CreateIdentifier(payload, guid, u)
+			if err != nil {
+				t.Fatalf("Failed to Create Identifier: %s", err.Error())
+			}
+	})
+
+	t.Run("Update", func(t *testing.T){
+
+		update := []byte(`{"name": "UpdatedName", "newprop": "newval"}`)
+		response, err := UpdateIdentifier(guid, update)
+		if err != nil {
+			t.Fatalf("Failed to Update Identifier: %s", err.Error())
+		}
+
+		t.Logf("Updated Identifier %s: %s", guid, string(response))
+
+	})
+
+	t.Run("Get", func(t *testing.T){
+		response, err := GetIdentifier(guid)
+		if err != nil {
+			t.Fatalf("Failed to Get Identifier: %s", err.Error())
+		}
+
+		t.Logf("Retrieved Identifier %s: %s", guid, string(response))
+	})
+
+	t.Run("Delete", func(t *testing.T){
+		response, err := DeleteIdentifier(guid)
+		if err != nil {
+			t.Fatalf("Failed to Delete Identifier: %s", err.Error())
+		}
+
+		t.Logf("Deleted Identifier %s: %s", guid, string(response))
+
+	})
+
+
+	_, err = DeleteNamespace(namespace)
+	if err != nil {
+		t.Fatalf("Failed to Delete Namespace %s: %s", namespace, err.Error())
+	}
+
+}
