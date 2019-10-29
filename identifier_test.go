@@ -34,7 +34,6 @@ func TestGeneralNested(t *testing.T) {
 
 }
 
-
 func TestMongoUpdate(t *testing.T) {
 	//TODO attempt to ping mongo
 	guid := "ark:99999/test"
@@ -67,10 +66,9 @@ func TestMongoUpdate(t *testing.T) {
 	t.Logf("Found Identifier: %+v", string(res))
 }
 
-
 func TestNamespace(t *testing.T) {
 
-	t.Run("Create", func(t *testing.T){
+	t.Run("Create", func(t *testing.T) {
 		namespace := []byte(`{
 			"@id": "ark:99999",
 			"@context": {"@vocab": "http://schema.org/"},
@@ -86,7 +84,7 @@ func TestNamespace(t *testing.T) {
 
 	//t.Run("Update", func(t *testing.T){})
 
-	t.Run("Get", func(t *testing.T){
+	t.Run("Get", func(t *testing.T) {
 		response, err := GetNamespace("ark:99999")
 
 		if err != nil {
@@ -96,7 +94,7 @@ func TestNamespace(t *testing.T) {
 		t.Logf("Got Namespace: %s", string(response))
 	})
 
-	t.Run("Delete", func(t *testing.T){
+	t.Run("Delete", func(t *testing.T) {
 		response, err := DeleteNamespace("ark:99999")
 
 		if err != nil {
@@ -107,7 +105,6 @@ func TestNamespace(t *testing.T) {
 	})
 
 }
-
 
 func TestIdentifier(t *testing.T) {
 
@@ -131,14 +128,14 @@ func TestIdentifier(t *testing.T) {
 	}`)
 
 	t.Run("Create", func(t *testing.T) {
-			var u User
-			err := CreateIdentifier(payload, guid, u)
-			if err != nil {
-				t.Fatalf("Failed to Create Identifier: %s", err.Error())
-			}
+		var u User
+		err := CreateIdentifier(payload, guid, u)
+		if err != nil {
+			t.Fatalf("Failed to Create Identifier: %s", err.Error())
+		}
 	})
 
-	t.Run("Update", func(t *testing.T){
+	t.Run("Update", func(t *testing.T) {
 
 		update := []byte(`{"name": "UpdatedName", "newprop": "newval"}`)
 		response, err := UpdateIdentifier(guid, update)
@@ -150,7 +147,7 @@ func TestIdentifier(t *testing.T) {
 
 	})
 
-	t.Run("Get", func(t *testing.T){
+	t.Run("Get", func(t *testing.T) {
 		response, err := GetIdentifier(guid)
 		if err != nil {
 			t.Fatalf("Failed to Get Identifier: %s", err.Error())
@@ -159,7 +156,7 @@ func TestIdentifier(t *testing.T) {
 		t.Logf("Retrieved Identifier %s: %s", guid, string(response))
 	})
 
-	t.Run("Delete", func(t *testing.T){
+	t.Run("Delete", func(t *testing.T) {
 		response, err := DeleteIdentifier(guid)
 		if err != nil {
 			t.Fatalf("Failed to Delete Identifier: %s", err.Error())
@@ -168,7 +165,6 @@ func TestIdentifier(t *testing.T) {
 		t.Logf("Deleted Identifier %s: %s", guid, string(response))
 
 	})
-
 
 	_, err = DeleteNamespace(namespace)
 	if err != nil {

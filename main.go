@@ -14,11 +14,6 @@ import (
 	"strings"
 )
 
-var MS = MongoServer{
-	URI:      "mongodb://mongoadmin:mongosecret@localhost:27017",
-	Database: "ors",
-}
-
 func init() {
 
 	mongoURI, exists := os.LookupEnv("MONGO_URI")
