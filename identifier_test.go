@@ -65,3 +65,17 @@ func TestMongoUpdate(t *testing.T) {
 	DeleteIdentifier(guid)
 	t.Logf("Found Identifier: %+v", string(res))
 }
+
+func TestNamespaceCreate(t *testing.T) {}
+
+func TestNamespaceGet(t *testing.T) {}
+
+func TestNamespaceUpdate(t *testing.T) {}
+
+func TestIdentifierCreate(t *testing.T) {}
+
+func TestIdentifierGet(t *testing.T) {}
+
+func TestIdentifierDelete(t *testing.T) {}
+
+func TestUpdateIdentifier(t *testing.T) {}
