@@ -8,8 +8,7 @@ import (
 func TestDOIConstructor(t *testing.T) {
 
     // test DOI constructor
-    t.Run("Success", func(tester *testing.T) {
-
+    t.Run("Success", func(te *testing.T) {
 	content := []byte(
 `{  
     "@context":"http://schema.org",
@@ -33,17 +32,30 @@ func TestDOIConstructor(t *testing.T) {
     }
 }`)
 
-	url = "https://example.org"
-	identifier = "10.5072/1234"
+	url := "https://example.org"
+	identifier := "10.5072/1234"
 	doi, err := NewDOI(identifier, content, url)
 
 	if err != nil {
-	    tester.Fatalf("Constructor Failed to Produce DOI\n\tError: %s", err.Error())
+	    te.Fatalf("Constructor Failed to Produce DOI\n\tError: %s", err.Error())
 	}
+
+	if doi.Identifier != identifier || doi.URL != url {
+	    te.Fatalf("Constructor Failed")
+	}
+	te.Logf("XML: %s", string(doi.DataciteXML))
     })
 
-    t.Run("NoMetadata", func(testing *testing.T) {
+    t.Run("NoMetadata", func(te *testing.T) {
+	content := []byte(``)
+	url := "https://example.org"
+	identifier := "10.5072/1234"
+	doi, err := NewDOI(identifier, content, url)
 
+	if err != nil {
+	    te.Fatalf("Failed to Convert Metadata")
+	}
+	te.Logf("XML: %s", string(doi.DataciteXML))
     })
 
 }
