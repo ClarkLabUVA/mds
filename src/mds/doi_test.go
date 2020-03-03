@@ -4,13 +4,12 @@ import (
 	"testing"
 )
 
-
 func TestDOIConstructor(t *testing.T) {
 
-    // test DOI constructor
-    t.Run("Success", func(te *testing.T) {
-	content := []byte(
-`{  
+	// test DOI constructor
+	t.Run("Success", func(te *testing.T) {
+		content := []byte(
+			`{  
     "@context":"http://schema.org",
     "@type":"SoftwareSourceCode",
     "@id": "https://doi.org/10.5438/qeg0-3gm3",
@@ -32,31 +31,31 @@ func TestDOIConstructor(t *testing.T) {
     }
 }`)
 
-	url := "https://example.org"
-	identifier := "10.5072/1234"
-	doi, err := NewDOI(identifier, content, url)
+		url := "https://example.org"
+		identifier := "10.5072/1234"
+		doi, err := NewDOI(identifier, content, url)
 
-	if err != nil {
-	    te.Fatalf("Constructor Failed to Produce DOI\n\tError: %s", err.Error())
-	}
+		if err != nil {
+			te.Fatalf("Constructor Failed to Produce DOI\n\tError: %s", err.Error())
+		}
 
-	if doi.Identifier != identifier || doi.URL != url {
-	    te.Fatalf("Constructor Failed")
-	}
-	te.Logf("XML: %s", string(doi.DataciteXML))
-    })
+		if doi.Identifier != identifier || doi.URL != url {
+			te.Fatalf("Constructor Failed")
+		}
+		te.Logf("XML: %s", string(doi.DataciteXML))
+	})
 
-    t.Run("NoMetadata", func(te *testing.T) {
-	content := []byte(``)
-	url := "https://example.org"
-	identifier := "10.5072/1234"
-	doi, err := NewDOI(identifier, content, url)
+	t.Run("NoMetadata", func(te *testing.T) {
+		content := []byte(``)
+		url := "https://example.org"
+		identifier := "10.5072/1234"
+		doi, err := NewDOI(identifier, content, url)
 
-	if err != nil {
-	    te.Fatalf("Failed to Convert Metadata")
-	}
-	te.Logf("XML: %s", string(doi.DataciteXML))
-    })
+		if err != nil {
+			te.Fatalf("Failed to Convert Metadata")
+		}
+		te.Logf("XML: %s", string(doi.DataciteXML))
+	})
 
 }
 
@@ -79,5 +78,3 @@ func TestDOICreate(t *testing.T) {
 func TestDOIDelete(t *testing.T) {
 
 }
-
-

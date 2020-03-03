@@ -1,17 +1,15 @@
 package main
 
 import (
-    "testing"
+	"testing"
 )
 
-
-
 func TestDataciteConversion(t *testing.T) {
-    var err error
+	var err error
 
-    // create a temporary file from ioutil
-    content := []byte(
-`{  
+	// create a temporary file from ioutil
+	content := []byte(
+		`{  
     "@context":"http://schema.org",
     "@type":"SoftwareSourceCode",
     "@id": "https://doi.org/10.5438/qeg0-3gm3",
@@ -33,16 +31,15 @@ func TestDataciteConversion(t *testing.T) {
     }
 }`)
 
-    dataciteXML, err := bologneseConvertXML(content)
+	dataciteXML, err := bologneseConvertXML(content)
 
-    if err != nil {
-	t.Fatalf("bologneseConverXML Error: %s", err.Error())
-    }
+	if err != nil {
+		t.Fatalf("bologneseConverXML Error: %s", err.Error())
+	}
 
-    if len(dataciteXML) == 0 {
-	t.Fatalf("bologneseConvertXML Error: conversion output is null")
-    }
+	if len(dataciteXML) == 0 {
+		t.Fatalf("bologneseConvertXML Error: conversion output is null")
+	}
 
-    t.Logf("bologneseConvertXML: Success\n\tOutput: %s", string(dataciteXML) )
+	t.Logf("bologneseConvertXML: Success\n\tOutput: %s", string(dataciteXML))
 }
-

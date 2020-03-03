@@ -303,7 +303,6 @@ type User struct {
 	Email string `json:"email" bson:"email"`
 }
 
-
 func mongoDeleteIdentifier() {
 
 }
@@ -327,5 +326,3 @@ func resolverDeleteIdentifier() {
 func resolverUpdateIdentifier() {
 
 }
-
-
