@@ -3,7 +3,7 @@ FROM ruby:2.6
 
 RUN gem install bolognese
 
-COPY go1.14.linux-amd64.tar.gz .
+COPY bin/go1.14.linux-amd64.tar.gz .
 RUN tar -xf go1.14.linux-amd64.tar.gz && rm go1.14.linux-amd64.tar.gz
 
 ENV PATH=$PATH:/go/bin
@@ -16,8 +16,7 @@ RUN go get go.mongodb.org/mongo-driver/mongo \
  github.com/urfave/negroni 
 
 WORKDIR /mds
-#COPY src/ .
-COPY main.go .
+COPY src/mds/ .
 
 RUN go build .
 
