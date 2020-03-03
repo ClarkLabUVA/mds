@@ -3,9 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
-	"net/http"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 )
 
 var DataciteUser = "VIVA.UVA-TEST"
@@ -84,7 +84,7 @@ func (doi *DOI) datacitePutMetadata() (err error) {
 
 	req, err := http.NewRequest("PUT", url, bodyBuffer)
 	if err != nil {
-	    return fmt.Errorf("Error: %w  Value: %s", errRequestAquire, err.Error())
+		return fmt.Errorf("Error: %w  Value: %s", errRequestAquire, err.Error())
 	}
 
 	req.Header.Add("Authorization", DataciteBasicAuth)
@@ -92,13 +92,13 @@ func (doi *DOI) datacitePutMetadata() (err error) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-	    return fmt.Errorf("Error: %w Value: %s", errRequestExecute, err.Error())
+		return fmt.Errorf("Error: %w Value: %s", errRequestExecute, err.Error())
 	}
 
 	statusCode := resp.StatusCode
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-	    return fmt.Errorf("Error: %w Value: %s", errRequestReadBody, err.Error())
+		return fmt.Errorf("Error: %w Value: %s", errRequestReadBody, err.Error())
 	}
 
 	// log status code
@@ -107,19 +107,19 @@ func (doi *DOI) datacitePutMetadata() (err error) {
 
 	// determine success of request
 	if statusCode == 201 {
-	    return nil
+		return nil
 	}
 
 	apiErr := APIError{
-		TargetURL: url,
-		Method: "PUT",
+		TargetURL:          url,
+		Method:             "PUT",
 		ResponseStatusCode: statusCode,
-		ResponseBody: responseBody,
-	    }
+		ResponseBody:       responseBody,
+	}
 
 	if statusCode == 422 {
-	    apiErr.Message =  "DOI Missing Required Metadata"
-	    return apiErr
+		apiErr.Message = "DOI Missing Required Metadata"
+		return apiErr
 	}
 
 	return apiErr
@@ -137,14 +137,14 @@ func (doi *DOI) datacitePutResolver() (err error) {
 
 	req, err := http.NewRequest("PUT", url, bodyBuffer)
 	if err != nil {
-	    return fmt.Errorf("Error: %w  Value: %s", errRequestAquire, err.Error())
+		return fmt.Errorf("Error: %w  Value: %s", errRequestAquire, err.Error())
 	}
 
 	req.Header.Add("Authorization", DataciteBasicAuth)
 
 	resp, err := client.Do(req)
 	if err != nil {
-	    return fmt.Errorf("Error: %w Value: %s", errRequestExecute, err.Error())
+		return fmt.Errorf("Error: %w Value: %s", errRequestExecute, err.Error())
 	}
 
 	statusCode := resp.StatusCode
@@ -159,11 +159,11 @@ func (doi *DOI) datacitePutResolver() (err error) {
 	}
 
 	apiErr := APIError{
-		TargetURL: url,
-		Method: "PUT",
+		TargetURL:          url,
+		Method:             "PUT",
 		ResponseStatusCode: statusCode,
-		ResponseBody: responseBody,
-	    }
+		ResponseBody:       responseBody,
+	}
 
 	return apiErr
 }
