@@ -10,11 +10,11 @@ import (
 )
 
 func init() {
-	path, err := exec.LookPath("bolognese")
+	_, err := exec.LookPath("bolognese")
 	if err != nil {
 		log.Fatal("Bologonese not installed")
 	}
-	log.Printf("INIT BolognesePath: %s\n", path)
+	//log.Printf("INIT BolognesePath: %s\n", path)
 }
 
 func bologneseConvertXML(inputMetadata []byte) (convertedMetadata []byte, err error) {
@@ -36,7 +36,7 @@ func bologneseConvertXML(inputMetadata []byte) (convertedMetadata []byte, err er
 		log.Printf("bologneseConvertXML: Failed to Run the Conversion Command\n\tError: %s", err.Error())
 		return
 	}
-	log.Printf("bologneseConvertXML Output: %q", out.String())
+	//log.Printf("bologneseConvertXML Output: %q", out.String())
 
 	// obtain the xml from the string
 	convertedMetadata = out.Bytes()

@@ -3,21 +3,17 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
-	"errors"
 	"net/http"
+	"io/ioutil"
+	"fmt"
 )
 
 var DataciteUser = "VIVA.UVA-TEST"
 var DatacitePassword = "Lib#14Books"
 var DatacitePrefix = "10.70020"
-var DataciteBasicAuth = base64.StdEncoding.EncodeToString([]byte("Basic " + base64.StdEncoding.EncodeToString([]byte(DataciteUser+":"+DatacitePassword))))
+var DataciteBasicAuth = "Basic " + base64.StdEncoding.EncodeToString([]byte(DataciteUser+":"+DatacitePassword))
 
-var (
-	errRequestAquire    = errors.New("net/http failed to aquire request")
-	errRequestExecution = errors.New("net/http failed in executing the request")
-)
-
-type Datacite struct {
+type DataciteCredentials struct {
 	Username string
 	Password string
 	Prefix   string
@@ -85,10 +81,10 @@ func (doi *DOI) datacitePutMetadata() (err error) {
 	client := &http.Client{}
 
 	bodyBuffer := bytes.NewBuffer(doi.DataciteXML)
-	req, err := http.NewRequest("PUT", url, bodyBuffer)
 
+	req, err := http.NewRequest("PUT", url, bodyBuffer)
 	if err != nil {
-		return
+	    return fmt.Errorf("Error: %w  Value: %s", errRequestAquire, err.Error())
 	}
 
 	req.Header.Add("Authorization", DataciteBasicAuth)
@@ -96,15 +92,37 @@ func (doi *DOI) datacitePutMetadata() (err error) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		return
+	    return fmt.Errorf("Error: %w Value: %s", errRequestExecute, err.Error())
 	}
+
+	statusCode := resp.StatusCode
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+	    return fmt.Errorf("Error: %w Value: %s", errRequestReadBody, err.Error())
+	}
+
+	// log status code
+	// log.Printf("Status Code: %d", statusCode)
+	// log.Printf("Response Body: %s", responseBody)
 
 	// determine success of request
-	if resp.StatusCode == 400 {
-		return
+	if statusCode == 201 {
+	    return nil
 	}
 
-	return
+	apiErr := APIError{
+		TargetURL: url,
+		Method: "PUT",
+		ResponseStatusCode: statusCode,
+		ResponseBody: responseBody,
+	    }
+
+	if statusCode == 422 {
+	    apiErr.Message =  "DOI Missing Required Metadata"
+	    return apiErr
+	}
+
+	return apiErr
 }
 
 func (doi *DOI) datacitePutResolver() (err error) {
@@ -116,28 +134,38 @@ func (doi *DOI) datacitePutResolver() (err error) {
 	client := http.Client{}
 
 	bodyBuffer := bytes.NewBuffer(payload)
-	req, err := http.NewRequest("PUT", url, bodyBuffer)
 
+	req, err := http.NewRequest("PUT", url, bodyBuffer)
 	if err != nil {
-		return
+	    return fmt.Errorf("Error: %w  Value: %s", errRequestAquire, err.Error())
 	}
 
 	req.Header.Add("Authorization", DataciteBasicAuth)
 
 	resp, err := client.Do(req)
-
 	if err != nil {
-		return
+	    return fmt.Errorf("Error: %w Value: %s", errRequestExecute, err.Error())
 	}
 
-	// log state of request
+	statusCode := resp.StatusCode
+	responseBody, _ := ioutil.ReadAll(resp.Body)
+
+	// Log Response
+	// log.Printf("PutResolver StatusCode: %d ResponseBody: %s", statusCode, responseBody)
 
 	// determine success of request
-	if resp.StatusCode == 400 {
-		return
+	if resp.StatusCode == 201 {
+		return nil
 	}
 
-	return
+	apiErr := APIError{
+		TargetURL: url,
+		Method: "PUT",
+		ResponseStatusCode: statusCode,
+		ResponseBody: responseBody,
+	    }
+
+	return apiErr
 }
 
 func (doi *DOI) dataciteDeleteMetadata() (err error) {
