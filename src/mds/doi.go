@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -170,6 +171,38 @@ func (doi *DOI) datacitePutResolver() (err error) {
 
 func (doi *DOI) dataciteDeleteMetadata() (err error) {
 	// DELETE https://mds.test.datacite.org/metadata/:doi
+	url := "https://mds.test.datacite.org/metadata/" + doi.Identifier
+	client := http.Client{}
 
-	return
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return fmt.Errorf("Error: %w  Value: %s", errRequestAquire, err.Error())
+	}
+
+	req.Header.Add("Authorization", DataciteBasicAuth)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("Error: %w Value: %s", errRequestExecute, err.Error())
+	}
+
+	statusCode := resp.StatusCode
+	responseBody, _ := ioutil.ReadAll(resp.Body)
+
+	// Log Response
+	log.Printf("DeleteMetadata StatusCode: %d ResponseBody: %s", statusCode, responseBody)
+
+	// determine success of request
+	if statusCode == 200 {
+		return nil
+	}
+
+	apiErr := APIError{
+		TargetURL:          url,
+		Method:             "DELETE",
+		ResponseStatusCode: statusCode,
+		ResponseBody:       responseBody,
+	}
+
+	return apiErr
 }

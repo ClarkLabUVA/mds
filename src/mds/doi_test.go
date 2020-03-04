@@ -165,6 +165,28 @@ func TestDOIDatacite(t *testing.T) {
 	})
 
 	// func TestDOIUpdate(t *testing.T) {}
+	t.Run("DeleteMetadata", func(t *testing.T) {
+
+		t.Run("Success", func(t *testing.T) {
+			err := doi.dataciteDeleteMetadata()
+
+			if err != nil {
+				t.Fatalf("Failed to Delete Metadata Error: %s", err.Error())
+			}
+		})
+
+		t.Run("Fail404", func(t *testing.T) {
+
+			testDOI := DOI{Identifier: DatacitePrefix + "/1a"}
+
+			err := testDOI.dataciteDeleteMetadata()
+
+			if err == nil {
+				t.Fatalf("Failed to Return 404 Error")
+			}
+		})
+
+	})
 
 	// func TestDOICreate(t *testing.T) {}
 
