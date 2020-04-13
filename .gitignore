@@ -6,3 +6,4 @@ deprecated/*
 *.ipynb
 bin/*
 notes.md
+mds
