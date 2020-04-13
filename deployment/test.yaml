@@ -37,41 +37,4 @@ spec:
     port: 27017
     targetPort: 27017
   type: ClusterIP
----
-apiVersion: v1
-kind: Pod
-metadata:
-    namespace: ors
-    name: stardog
-    labels:
-        app: stardog
-spec:
-    containers:
-        - name: stardog
-          image: stardog
----
-apiVersion: v1
-kind: Service
-metadata:
-    namespace: ors
-    name: stardog
-    labels:
-        app: stardog
-spec:
-    selector:
-        app: stardog
-    ports:
-    - protocol: TCP
-      port: 5820
-      targetPort: 5820
-    type: ClusterIP
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-    namespace: ors
-    name: stardog-license
-    labels:
-        app: ors
-data:
 
