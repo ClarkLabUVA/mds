@@ -1,12 +1,13 @@
 package main
 
+/*
 import (
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 	"net/http"
 
 	"log"
-	"os"
+//	"os"
 
 	"encoding/json"
 	"github.com/satori/go.uuid"
@@ -25,7 +26,6 @@ func init() {
 	if exists {
 		MS.Database = mongoDB
 	}
-
 }
 
 func main() {
@@ -118,7 +118,7 @@ func CreateArkNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	guid := "ark:" + vars["prefix"]
 
-	err = CreateNamespace(payload, guid)
+	err = backend.CreateNamespace(payload, guid)
 	switch err {
 	case nil:
 		w.Header().Set("Content-Type", "application/json")
@@ -142,7 +142,7 @@ func GetArkNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	guid := "ark:" + vars["prefix"]
 
-	ns, err := GetNamespace(guid)
+	ns, err := backend.GetNamespace(guid)
 
 	switch err {
 
@@ -172,7 +172,7 @@ func UpdateArkNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 
 	update, err := ioutil.ReadAll(r.Body)
 
-	response, err := UpdateNamespace(update, guid)
+	response, err := backend.UpdateNamespace(update, guid)
 
 	switch err {
 	case nil:
@@ -193,7 +193,7 @@ func ArkResolveHandler(w http.ResponseWriter, r *http.Request) {
 
 	guid := strings.TrimPrefix(r.RequestURI, "/")
 
-	identifier, err := GetIdentifier(guid)
+	identifier, err := backend.GetIdentifier(guid)
 
 	if err != nil {
 		serveJSON(w, 500, map[string]interface{}{"error": err.Error()})
@@ -223,7 +223,7 @@ func ArkCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var u User
-	err = CreateIdentifier(bodyBytes, guid, u)
+	err = backend.CreateIdentifier(bodyBytes, guid, u)
 
 	switch err {
 	case nil:
@@ -270,7 +270,7 @@ func ArkMintHandler(w http.ResponseWriter, r *http.Request) {
 
 	// store identifier record
 	var u User
-	err = CreateIdentifier(bodyBytes, guid, u)
+	err = backend.CreateIdentifier(bodyBytes, guid, u)
 
 	switch err {
 
@@ -305,7 +305,7 @@ func ArkUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	guid := "ark:" + vars["prefix"] + "/" + vars["suffix"]
 
-	identifier, err := UpdateIdentifier(guid, update)
+	identifier, err := backend.UpdateIdentifier(guid, update)
 
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -328,7 +328,7 @@ func ArkDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	guid := "ark:" + vars["prefix"] + "/" + vars["suffix"]
 
-	identifier, err := DeleteIdentifier(guid)
+	identifier, err := backend.DeleteIdentifier(guid)
 
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -354,3 +354,4 @@ func serveJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.Write(b)
 
 }
+*/

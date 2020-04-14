@@ -5,9 +5,10 @@ import (
 	"errors"
 	bson "go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
-	"reflect"
 	"strings"
-	"time"
+//	"time"
+	"fmt"
+	"github.com/buger/jsonparser"
 )
 
 var ErrInvalidMetadata = errors.New("Metadata Document is Invalid")
@@ -16,20 +17,216 @@ var ErrAlreadyExists = errors.New("Document Already Exists")
 var ErrNoNamespace = errors.New("No Namespace Record Found")
 var ErrMissingProp = errors.New("Instance is missing required properties")
 
-var COL = "ids"
+var ErrJSONUnmarshal = errors.New("Failed to Unmarshal JSON")
 
-var Stardog = StardogServer{
-	URI:      "http://stardog.uvadcos.io",
-	Password: "admin",
-	Username: "admin",
-	Database: "testing",
+type Backend struct {
+	Mongo	MongoServer
+	Stardog	StardogServer
+	useStardog bool
 }
 
-var MS = MongoServer{
-	URI:      "mongodb://mongoadmin:mongosecret@localhost:27017",
-	Database: "ors",
+
+func (b *Backend) CreateNamespace(guid string, payload []byte) (err error) {
+
+	ns := make(map[string]interface{})
+	err = json.Unmarshal(payload, &ns)
+
+	if err != nil {
+		return fmt.Errorf(`{"message": "%q", "error": "%s"}`, ErrJSONUnmarshal, err.Error())
+	}
+
+	ns["@id"] = guid
+	ns["_id"] = guid
+
+	bsonRecord, err := bson.Marshal(ns)
+
+	if err != nil {
+		return
+	}
+
+	err = b.Mongo.InsertOne(bsonRecord)
+
+	if err != nil {
+		_, foundErr := b.Mongo.FindOne(bson.D{{"_id", guid}})
+		if foundErr == nil {
+			err = ErrAlreadyExists
+		}
+	}
+
+	return
 }
 
+
+func (b *Backend) GetNamespace(guid string) (response []byte, err error) {
+
+	ns, err := b.Mongo.FindOne(bson.D{{"_id", guid}})
+
+	if err != nil {
+		return
+	}
+
+	response, err = json.Marshal(ns)
+
+	return
+}
+
+
+func (b *Backend) UpdateNamespace(payload []byte, guid string) (response []byte, err error) { return }
+
+
+func (b *Backend) DeleteNamespace(guid string) (response []byte, err error) { return }
+
+
+func (b *Backend) CreateIdentifier(guid string, payload []byte,  author User) (err error) {
+
+	guidSplit := strings.Split(guid, "/")
+	_, err = b.GetNamespace(guidSplit[0])
+
+	if err == mongo.ErrNoDocuments {
+		return ErrNoNamespace
+	}
+
+	metadata := processMetadataWrite(payload, guid, author)
+
+	// TODO validate identifier metadata
+
+
+
+	// add to stardog
+	err = b.Stardog.AddIdentifier(payload)
+	if err != nil {
+		return fmt.Errorf("Stardog Failed to Create Identifier: %s", err.Error())
+	}
+
+	// store identifier in Mongo
+	var bsonRecord bson.D
+	err = bson.UnmarshalExtJSON(metadata, true, &bsonRecord)
+
+	if err != nil {
+		return fmt.Errorf("Failed to Unmarshal JSON to BSON\tError: %s", err.Error())
+	}
+
+	err = b.Mongo.InsertOne(bsonRecord)
+
+	// if insert fails check that identifier doesn't already exist
+	if err != nil {
+		_, foundErr := b.Mongo.FindOne(bson.D{{"_id", guid}})
+		if foundErr == nil {
+			err = ErrAlreadyExists
+		}
+	}
+
+	return
+}
+
+
+func (b *Backend) GetIdentifier(guid string) (response []byte, err error) {
+
+	record, err := b.Mongo.FindOne(bson.D{{"_id", guid}})
+
+	if err != nil {
+		return
+	}
+
+	response, err = json.Marshal(record)
+
+	response = processMetadataRead(response)
+
+	return
+}
+
+
+func (b *Backend) DeleteIdentifier(guid string) (response []byte, err error) {
+
+	record, err := b.Mongo.DeleteOne(bson.D{{"_id", guid}})
+
+	if err != nil {
+		return
+	}
+
+	response, err = json.Marshal(record)
+
+	// remove identifier from stardog
+	err = b.Stardog.RemoveIdentifier(response)
+
+	//response = processMetadataRead(response)
+
+	return
+
+}
+
+
+func (b *Backend) UpdateIdentifier(guid string, update []byte) (response []byte, err error) {
+
+	return
+}
+
+
+func processMetadataWrite(metadata []byte, guid string, author User) []byte {
+
+	/*
+	// set @id
+	metadata["@id"] = guid
+	metadata["_id"] = guid
+
+	// set @context
+	if _, ok := metadata["@context"]; !ok {
+		metadata["@context"] = map[string]string{"@base": "http://schema.org/"}
+	}
+
+	// set namespace
+	guidSplit := strings.Split(guid, "/")
+	metadata["namespace"] = guidSplit[0]
+
+	// set url
+	metadata["url"] = "http://ors.uvadcos.io/" + guid
+
+	// set sdPublisher
+	if author.ID != "" && author.Name != "" {
+		metadata["sdPublisher"] = author
+	}
+
+	// set sdPublicationDate
+	metadata["sdPublicationDate"] = time.Now()
+
+	// set version
+	metadata["version"] = 1
+
+	// set identifierStatus
+	if _, ok := metadata["identifierStatus"]; !ok {
+		metadata["identifierStatus"] = "DRAFT"
+	}
+	*/
+	return metadata
+}
+
+// Replace with buger/jsonparser
+func processMetadataRead(metadata []byte) []byte {
+	// del _id
+	// delete(metadata, "_id")
+
+	// del namespace
+	// delete(metadata, "namespace")
+
+	return metadata
+}
+
+var backend = Backend{
+	Stardog: StardogServer{
+		URI:      "http://stardog.uvadcos.io",
+		Password: "admin",
+		Username: "admin",
+		Database: "testing",
+	},
+	Mongo: MongoServer{
+		URI:      "mongodb://mongoadmin:mongosecret@localhost:27017",
+		Database: "ors",
+		Collection: "ids",
+	},
+}
+
+
+/*
 func CreateNamespace(payload []byte, guid string) (err error) {
 	ns := make(map[string]interface{})
 	err = json.Unmarshal(payload, &ns)
@@ -93,55 +290,11 @@ func DeleteNamespace(guid string) (response []byte, err error) {
 	return
 }
 
-func processMetadataWrite(metadata map[string]interface{}, guid string, author User) map[string]interface{} {
-	// set @id
-	metadata["@id"] = guid
-	metadata["_id"] = guid
-
-	// set @context
-	if _, ok := metadata["@context"]; !ok {
-		metadata["@context"] = map[string]string{"@base": "http://schema.org/"}
-	}
-
-	// set namespace
-	guidSplit := strings.Split(guid, "/")
-	metadata["namespace"] = guidSplit[0]
-
-	// set url
-	metadata["url"] = "http://ors.uvadcos.io/" + guid
-
-	// set sdPublisher
-	if author.ID != "" && author.Name != "" {
-		metadata["sdPublisher"] = author
-	}
-
-	// set sdPublicationDate
-	metadata["sdPublicationDate"] = time.Now()
-
-	// set version
-	metadata["version"] = 1
-
-	// set identifierStatus
-	if _, ok := metadata["identifierStatus"]; !ok {
-		metadata["identifierStatus"] = "DRAFT"
-	}
-
-	return metadata
-}
 
 // unmarshal BSON record to JSON
 // and format metadata
 // - full urls for identifiers
 // - pops _id
-func processMetadataRead(metadata map[string]interface{}) map[string]interface{} {
-	// del _id
-	delete(metadata, "_id")
-
-	// del namespace
-	delete(metadata, "namespace")
-
-	return metadata
-}
 
 // Q: TRANSACTION ATOMICITY FOR MULTIPLE SERVICES
 // if fails
@@ -248,82 +401,11 @@ func UpdateIdentifier(guid string, update []byte) (response []byte, err error) {
 	response, err = bson.MarshalExtJSON(raw, false, false)
 	return
 }
-
-type tuple struct {
-	Key   string
-	Value interface{}
-}
-
-func nestedUpdate(update []byte) (bsonUpdate []byte) {
-	processedMap := make(map[string]interface{})
-	updateMap := make(map[string]interface{})
-	json.Unmarshal(update, &updateMap)
-
-	resChan := make(chan tuple, 50)
-	dotConvert("", updateMap, resChan)
-
-	for {
-		select {
-		case elem := <-resChan:
-			processedMap[elem.Key] = elem.Value
-		default:
-			close(resChan)
-			bsonUpdate, _ = bson.Marshal(
-				map[string]interface{}{
-					"$set": processedMap,
-				})
-			return
-		}
-	}
-}
-
-func dotConvert(base string, input map[string]interface{}, res chan tuple) {
-	for key, val := range input {
-		var newBase string
-		if base == "" {
-			newBase = key
-		} else {
-			newBase = base + "." + key
-		}
-		if valType := reflect.ValueOf(val); valType.Kind() == reflect.Map {
-			dotConvert(newBase, val.(map[string]interface{}), res)
-		} else {
-			//log.Println("$set: ", newBase, " ", val)
-			res <- tuple{Key: newBase, Value: val}
-		}
-	}
-
-	return
-
-}
+*/
 
 type User struct {
 	ID    string `json:"@id" bson:"_id"`
 	Type  string `json:"@type" bson:"@type"`
 	Name  string `json:"name" bson:"name"`
 	Email string `json:"email" bson:"email"`
-}
-
-func mongoDeleteIdentifier() {
-
-}
-
-func mongoCreateIdentifier() {
-
-}
-
-func mongoUpdateIdentifier() {
-
-}
-
-func resolverCreateIdentifier() {
-
-}
-
-func resolverDeleteIdentifier() {
-
-}
-
-func resolverUpdateIdentifier() {
-
 }

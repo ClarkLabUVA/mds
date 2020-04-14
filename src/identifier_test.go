@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+
 func TestGeneralNested(t *testing.T) {
 	inputUpdate := []byte(`{"hello":{"world": {"goodnight": "moon"} } }`)
 	bsonUpdate := nestedUpdate(inputUpdate)
@@ -34,6 +35,84 @@ func TestGeneralNested(t *testing.T) {
 
 }
 
+func TestBackend(t *testing.T) {
+
+	var backend = Backend{
+		Stardog: StardogServer{
+			URI:      "http://localhost:5820",
+			Password: "admin",
+			Username: "admin",
+			Database: "testing",
+		},
+		Mongo: MongoServer{
+			URI:      "mongodb://mongoadmin:mongosecret@localhost:27017",
+			Database: "ors",
+			Collection: "test",
+		},
+	}
+
+
+	// drop the test database from mongo
+	ctx, cancel, client, _ := backend.Mongo.connect()
+	defer cancel()
+
+	col := client.Database(backend.Mongo.Database).Collection(backend.Mongo.Collection)
+	if cleanUpErr := col.Drop(ctx); cleanUpErr != nil {
+		t.Fatalf("Failed CleanUp\tError: %s", cleanUpErr.Error())
+	}
+
+
+	namespaceGUID := "ark:9999"
+	namespacePayload := []byte(`{"name": "test namespace"}`)
+
+	identifierGUID := "ark:9999/test"
+	identifierPayload := []byte(`{"@context": "https://schema.org/", "name": "test identifier", "@type": "Dataset"}`)
+
+	t.Run("CreateNamespace", func(t *testing.T) {
+
+		err := backend.CreateNamespace(namespaceGUID, namespacePayload)
+		if err != nil {
+			t.Fatalf("Failed to Create Namespace\tError: %s", err.Error())
+		}
+
+	})
+	t.Run("GetNamespace", func(t *testing.T) {
+		namespace, err := backend.GetNamespace(namespaceGUID)
+		if err != nil {
+			t.Fatalf("Failed to Get Namespace\tError: %s", err.Error())
+		}
+
+		t.Logf("Found Namespace with Content\t%s", string(namespace))
+	})
+
+	//t.Run("UpdateNamespace", func(t *testing.T) {})
+	//t.Run("DeleteNamespace", func(t *testing.T) {})
+	t.Run("CreateIdentifier", func(t *testing.T) {
+
+		err := backend.CreateIdentifier(identifierGUID, identifierPayload, User{})
+		if err != nil {
+			t.Fatalf("Failed to Create Identifier\tError: %s", err.Error())
+		}
+
+	})
+	t.Run("GetIdentifier", func(t *testing.T){
+
+		payload, err := backend.GetIdentifier(identifierGUID)
+		if err != nil {
+			t.Fatalf("Failed to Get Identifier: %s", err.Error())
+		}
+
+		t.Logf("Found Identifier: %s", string(payload))
+
+	})
+	t.Run("UpdateIdentifier", func(t *testing.T){})
+
+
+
+
+}
+
+/*
 func TestMongoUpdate(t *testing.T) {
 	//TODO attempt to ping mongo
 	guid := "ark:99999/test"
@@ -172,3 +251,4 @@ func TestIdentifier(t *testing.T) {
 	}
 
 }
+*/

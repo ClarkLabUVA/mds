@@ -6,88 +6,86 @@ import (
 
 var namedGraph = "ark:/99999/test-named-graph"
 
-var s = StardogServer{URI: "http://stardog.uvadcos.io",
+var s = StardogServer{
+	URI: "http://localhost:5820",
 	Password: "admin",
 	Username: "admin",
 	Database: "testing",
 }
 
-func TestStardogTransactionSuccess(t *testing.T) {
+func TestStardog(t *testing.T) {
 
-	txId, err := s.NewTransaction()
-	if err != nil {
-		t.Fatalf("Failed To Start Transaction: %s", err.Error())
-	}
 
-	t.Logf("Started Transaction: %s", txId)
+	t.Run("CreateIdentifier", func(t *testing.T){
+		txId, err := s.NewTransaction()
+		if err != nil {
+			t.Fatalf("Failed To Start Transaction: %s", err.Error())
+		}
 
-}
+		t.Logf("Started Transaction: %s", txId)
 
-func TestStardogTransactionDB404(t *testing.T) {
+		data := []byte(`{"@id": "ark:/99999/test-data", "@context": {"@vocab": "http://schema.org/"}, "name": "test-data"}`)
+		err = s.AddData(txId, data, "")
 
-	faulty_stardog := StardogServer{URI: "http://stardog.uvadcos.io",
-		Password: "admin",
-		Username: "admin",
-		Database: "fake",
-	}
+		if err != nil {
+			t.Fatalf("Transaction Failed to Add Data: %s", err.Error())
+		}
 
-	_, err := faulty_stardog.NewTransaction()
-	if err == nil {
-		t.Fatalf("Transaction Should have Failed")
-	}
+		err = s.Commit(txId)
 
-	t.Logf("TX status: %s", err.Error())
+		if err != nil {
+			t.Fatalf("Failed to Commit Transaction: %s", err.Error())
+		}
 
-}
+		})
 
-func TestStardogTransactionAddData(t *testing.T) {
+	t.Run("IdentifierOperations", func(t *testing.T){
+		identifier := []byte(`{"@id": "ark:/99999/identifier-test", "@context": {"@vocab": "http://schema.org/"}, "name": "identifier-test"}`)
+		err := s.AddIdentifier(identifier)
 
-	txId, err := s.NewTransaction()
-	if err != nil {
-		t.Fatalf("Failed To Start Transaction: %s", err.Error())
-	}
+		if err != nil {
+			t.Fatalf("Failed to Add Identifier: %s", err.Error())
+		}
 
-	t.Logf("Started Transaction: %s", txId)
+		err = s.RemoveIdentifier(identifier)
 
-	data := []byte(`{"@id": "ark:/99999/test-data", "@context": {"@vocab": "http://schema.org/"}, "name": "test-data"}`)
-	err = s.AddData(txId, data, "")
+		if err != nil {
+			t.Fatalf("Failed to Add Identifier: %s", err.Error())
+		}
+	})
 
-	if err != nil {
-		t.Fatalf("Transaction Failed to Add Data: %s", err.Error())
-	}
 
-	err = s.Commit(txId)
 
-	if err != nil {
-		t.Fatalf("Failed to Commit Transaction: %s", err.Error())
-	}
+	/*
+	t.Run("NamedGraph", func(t *testing.T){
 
-}
+		txId, err := s.NewTransaction()
+		if err != nil {
+			t.Fatalf("Failed To Start Transaction: %s", err.Error())
+		}
 
-func TestStardogTransactionAddDataGraphURI(t *testing.T) {
+		t.Logf("Started Transaction: %s", txId)
 
-	txId, err := s.NewTransaction()
-	if err != nil {
-		t.Fatalf("Failed To Start Transaction: %s", err.Error())
-	}
+		data := []byte(`{"@id": "ark:/99999/test-data", "@context": {"@vocab": "http://schema.org/"}, "name": "test-data"}`)
+		err = s.AddData(txId, data, namedGraph)
 
-	t.Logf("Started Transaction: %s", txId)
+		if err != nil {
+			t.Fatalf("Transaction Failed to Add Data: %s", err.Error())
+		}
 
-	data := []byte(`{"@id": "ark:/99999/test-data", "@context": {"@vocab": "http://schema.org/"}, "name": "test-data"}`)
-	err = s.AddData(txId, data, namedGraph)
+		err = s.Commit(txId)
 
-	if err != nil {
-		t.Fatalf("Transaction Failed to Add Data: %s", err.Error())
-	}
+		if err != nil {
+			t.Fatalf("Failed to Commit Transaction: %s", err.Error())
+		}
 
-	err = s.Commit(txId)
-
-	if err != nil {
-		t.Fatalf("Failed to Commit Transaction: %s", err.Error())
-	}
+	})
+	*/
 
 }
 
+
+/*
 func TestStardogTransactionRemoveData(t *testing.T) {
 
 	txId, err := s.NewTransaction()
@@ -135,20 +133,4 @@ func TestStardogTransactionRemoveDataGraphURI(t *testing.T) {
 	}
 
 }
-
-func TestStardogIdentifier(t *testing.T) {
-
-	identifier := []byte(`{"@id": "ark:/99999/identifier-test", "@context": {"@vocab": "http://schema.org/"}, "name": "identifier-test"}`)
-	err := s.AddIdentifier(identifier)
-
-	if err != nil {
-		t.Fatalf("Failed to Add Identifier: %s", err.Error())
-	}
-
-	err = s.RemoveIdentifier(identifier)
-
-	if err != nil {
-		t.Fatalf("Failed to Add Identifier: %s", err.Error())
-	}
-
-}
+*/
