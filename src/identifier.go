@@ -6,7 +6,7 @@ import (
 	bson "go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
 	"strings"
-//	"time"
+	"time"
 	"fmt"
 	"github.com/buger/jsonparser"
 )
@@ -86,7 +86,10 @@ func (b *Backend) CreateIdentifier(guid string, payload []byte,  author User) (e
 		return ErrNoNamespace
 	}
 
-	metadata := processMetadataWrite(payload, guid, author)
+	metadata, err := processMetadataWrite(payload, guid, author)
+	if err != nil {
+		return
+	}
 
 	// TODO validate identifier metadata
 
@@ -162,51 +165,78 @@ func (b *Backend) UpdateIdentifier(guid string, update []byte) (response []byte,
 }
 
 
-func processMetadataWrite(metadata []byte, guid string, author User) []byte {
+func processMetadataWrite(inputMetadata []byte, guid string, author User) (metadata []byte, err error) {
 
-	/*
 	// set @id
-	metadata["@id"] = guid
-	metadata["_id"] = guid
+	metadata, err = jsonparser.Set(inputMetadata, []byte(`"`+ guid +`"`), "@id")
+	if err != nil {
+		return
+	}
 
-	// set @context
-	if _, ok := metadata["@context"]; !ok {
-		metadata["@context"] = map[string]string{"@base": "http://schema.org/"}
+	metadata, err = jsonparser.Set(metadata, []byte(`"`+ guid +`"`), "_id")
+	if err != nil {
+		return
+	}
+
+	// set the default context
+	// TODO: if object add property "@vocab": "http://schema.org"
+	metadata, err = jsonparser.Set(metadata, []byte(`{"@vocab": "http://schema.org"}`), "@context")
+	if err != nil {
+		return
 	}
 
 	// set namespace
 	guidSplit := strings.Split(guid, "/")
-	metadata["namespace"] = guidSplit[0]
+	metadata, err = jsonparser.Set(metadata, []byte(`"`+guidSplit[0]+`"`), "namespace")
+	if err != nil {
+		return
+	}
+
 
 	// set url
-	metadata["url"] = "http://ors.uvadcos.io/" + guid
-
-	// set sdPublisher
-	if author.ID != "" && author.Name != "" {
-		metadata["sdPublisher"] = author
+	metadata, err = jsonparser.Set(metadata, []byte(`"http://ors.uvadcos.io/` + guid + `"`), "url")
+	if err != nil {
+		return
 	}
+
+
+	// fill in author
+	if author.ID != "" {
+		metadata, err = jsonparser.Set(metadata, []byte(`"`+ author.ID +`"`), "sdPublisher", "@id")
+		if err != nil {
+			return
+		}
+	}
+
+
+	if author.Name != "" {
+		metadata, err = jsonparser.Set(metadata, []byte(`"`+ author.Name +`"`), "sdPublisher", "name")
+		if err != nil {
+			return
+		}
+	}
+
 
 	// set sdPublicationDate
-	metadata["sdPublicationDate"] = time.Now()
+	now, err := time.Now().MarshalJSON()
+	metadata, err = jsonparser.Set(metadata, now, "sdPublicationDate")
 
-	// set version
-	metadata["version"] = 1
 
-	// set identifierStatus
-	if _, ok := metadata["identifierStatus"]; !ok {
-		metadata["identifierStatus"] = "DRAFT"
-	}
-	*/
-	return metadata
+	// TODO if not set default to "version": 1
+	// metadata["version"] = 1
+
+
+	return
 }
 
 // Replace with buger/jsonparser
 func processMetadataRead(metadata []byte) []byte {
-	// del _id
-	// delete(metadata, "_id")
+	// delete _id property
+	metadata = jsonparser.Delete(metadata, "_id")
 
-	// del namespace
-	// delete(metadata, "namespace")
+	// delete namespace properties namespace
+	metadata = jsonparser.Delete(metadata, "namespace")
+
 
 	return metadata
 }
