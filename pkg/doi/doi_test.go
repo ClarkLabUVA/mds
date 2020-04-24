@@ -1,4 +1,4 @@
-package main
+package doi
 
 import (
 	"testing"
@@ -9,13 +9,13 @@ func TestDOIConstructor(t *testing.T) {
 	// test DOI constructor
 	t.Run("Success", func(te *testing.T) {
 		content := []byte(
-			`{  
+			`{
     "@context":"http://schema.org",
     "@type":"SoftwareSourceCode",
     "@id": "https://doi.org/10.5438/qeg0-3gm3",
     "url":"https://github.com/datacite/maremma",
     "name":"Maremma: a Ruby library for simplified network calls",
-    "author":{  
+    "author":{
     "@type":"person",
     "@id":"http://orcid.org/0000-0003-0077-4738",
     "name":"Martin Fenner"
@@ -25,7 +25,7 @@ func TestDOIConstructor(t *testing.T) {
     "dateCreated":"2015-11-28",
     "datePublished":"2017-02-24",
     "dateModified":"2017-02-24",
-    "publisher":{  
+    "publisher":{
       "@type":"Organization",
       "name":"DataCite"
     }
@@ -61,13 +61,13 @@ func TestDOIConstructor(t *testing.T) {
 
 func TestDOIDatacite(t *testing.T) {
 
-	content := []byte(`{  
+	content := []byte(`{
     "@context":"http://schema.org",
     "@type":"SoftwareSourceCode",
     "@id": "https://doi.org/10.5438/qeg0-3gm3",
     "url":"https://github.com/datacite/maremma",
     "name":"Maremma: a Ruby library for simplified network calls",
-    "author":{  
+    "author":{
     "@type":"person",
     "@id":"http://orcid.org/0000-0003-0077-4738",
     "name":"Martin Fenner"
@@ -77,7 +77,7 @@ func TestDOIDatacite(t *testing.T) {
     "dateCreated":"2015-11-28",
     "datePublished":"2017-02-24",
     "dateModified":"2017-02-24",
-    "publisher":{  
+    "publisher":{
       "@type":"Organization",
       "name":"DataCite"
     }
@@ -99,7 +99,7 @@ func TestDOIDatacite(t *testing.T) {
 			}
 		})
 		t.Run("Failure", func(t *testing.T) {
-			content := []byte(`{  
+			content := []byte(`{
 	    "@context":"http://schema.org",
 	    "@type":"SoftwareSourceCode",
 	    "@id": "https://doi.org/10.5438/qeg0-3gm3",
@@ -109,7 +109,7 @@ func TestDOIDatacite(t *testing.T) {
 	    "keywords":"faraday, excon, net/http",
 	    "dateCreated":"2015-11-28",
 	    "dateModified":"2017-02-24",
-	    "publisher":{  
+	    "publisher":{
 	      "@type":"Organization",
 	      "name":"DataCite"
 	    }
