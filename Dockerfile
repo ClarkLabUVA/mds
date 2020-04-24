@@ -11,12 +11,13 @@ RUN go get go.mongodb.org/mongo-driver/mongo \
  go.mongodb.org/mongo-driver/bson \
  github.com/satori/go.uuid \
  github.com/gorilla/mux \
- github.com/urfave/negroni 
+ github.com/urfave/negroni \
+ github.com/buger/jsonparser
 
 WORKDIR /mds
-COPY src/ .
+COPY src/ mds/.
 
-RUN go build .
+RUN go build -o mds src/.
 
 EXPOSE 80
 
