@@ -20,7 +20,7 @@ func TestStardog(t *testing.T) {
 
 		t.Run("Create", func(t *testing.T){
 
-			response, statusCode, err := s.createDatabase(s.Database)
+			response, statusCode, err := s.CreateDatabase(s.Database)
 
 			if err != nil {
 				t.Fatalf("Failed to Create Database\nStatusCode: %d\nResponse: %s", statusCode, string(response))
@@ -31,7 +31,7 @@ func TestStardog(t *testing.T) {
 		})
 
 		t.Run("Delete", func(t *testing.T){
-			response, err := s.dropDatabase(s.Database)
+			response, err := s.DropDatabase(s.Database)
 
 			if err != nil {
 				t.Fatalf("Failed to Drop Database\nResponse: %s", string(response))

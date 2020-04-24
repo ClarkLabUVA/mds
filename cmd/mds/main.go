@@ -9,7 +9,7 @@ import (
 //	"os"
 
 	"encoding/json"
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"io/ioutil"
 	"strings"
 
@@ -35,20 +35,20 @@ func init() {
 	*/
 
 	server = identifier.Backend{
-		Stardog: StardogServer{
+		Stardog: identifier.StardogServer{
 			URI:      "http://localhost:5820",
 			Password: "admin",
 			Username: "admin",
 			Database: "ors",
 		},
-		Mongo: MongoServer{
+		Mongo: identifier.MongoServer{
 			URI:      "mongodb://mongoadmin:mongosecret@localhost:27017",
 			Database: "ors",
 			Collection: "ids",
 		},
 	}
 
-	server.Stardog.createDatabase(server.Stardog.Database)
+	server.Stardog.CreateDatabase(server.Stardog.Database)
 
 
 }
@@ -150,7 +150,7 @@ func CreateArkNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(201)
 		w.Write([]byte(`{"created": "` + guid + `"}`))
 
-	case ErrAlreadyExists:
+	case identifier.ErrAlreadyExists:
 		serveJSON(w, 400, map[string]interface{}{"error": err.Error()})
 
 	default:
@@ -176,7 +176,7 @@ func GetArkNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		w.Write(ns)
 
-	case ErrNilDocument:
+	case identifier.ErrNilDocument:
 		serveJSON(w, 404, map[string]interface{}{"error": "Namespace Not Found"})
 
 	default:
@@ -247,20 +247,20 @@ func ArkCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var u User
+	var u identifier.User
 	err = server.CreateIdentifier(guid, bodyBytes, u)
 
 	switch err {
 	case nil:
 		serveJSON(w, 201, map[string]interface{}{"created": guid})
 
-	case ErrNoNamespace:
+	case identifier.ErrNoNamespace:
 		serveJSON(w, 404, map[string]interface{}{"error": "Namespace ark:" + namespace + " does not exist"})
 
-	case ErrAlreadyExists:
+	case identifier.ErrAlreadyExists:
 		serveJSON(w, 400, map[string]interface{}{"error": "Identifier ark:" + guid + " already exists"})
 
-	case ErrInvalidMetadata:
+	case identifier.ErrInvalidMetadata:
 		serveJSON(w, 400, map[string]interface{}{"error": err.Error(), "message": "Invalid Metadata"})
 
 	default:
@@ -284,17 +284,13 @@ func ArkMintHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	// create a uuid
-	identifierUUID, err := uuid.NewV4()
-	if err != nil {
-		serveJSON(w, 500, map[string]interface{}{"error": err.Error(), "message": "Failed to Generate UUID"})
-		return
-	}
+	identifierUUID := uuid.New()
 
 	// append to identifier
 	guid := "ark:" + vars["prefix"] + "/" + identifierUUID.String()
 
 	// store identifier record
-	var u User
+	var u identifier.User
 	err = server.CreateIdentifier(guid, bodyBytes, u)
 
 	switch err {
@@ -302,10 +298,10 @@ func ArkMintHandler(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		serveJSON(w, 201, map[string]interface{}{"created": guid})
 
-	case ErrNoNamespace:
+	case identifier.ErrNoNamespace:
 		serveJSON(w, 404, map[string]interface{}{"error": "Namespace ark:" + vars["prefix"] + " does not exist"})
 
-	case ErrInvalidMetadata:
+	case identifier.ErrInvalidMetadata:
 		serveJSON(w, 400, map[string]interface{}{"error": err.Error(), "message": "Invalid Metadata"})
 
 	default:

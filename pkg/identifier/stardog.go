@@ -27,7 +27,7 @@ type StardogServer struct {
 
 
 // TODO: Fix Request Can't Find
-func (s *StardogServer) createDatabase(databaseName string) (responseBody []byte, statusCode int, err error) {
+func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte, statusCode int, err error) {
 
 	url := s.URI + "/admin/databases"
 
@@ -90,7 +90,7 @@ func (s *StardogServer) createDatabase(databaseName string) (responseBody []byte
 
 }
 
-func (s *StardogServer) dropDatabase(databaseName string) (response []byte, err error) {
+func (s *StardogServer) DropDatabase(databaseName string) (response []byte, err error) {
 
 	url := s.URI + "/admin/databases/" + databaseName
 	response, err = s.request(url, "DELETE", nil)
