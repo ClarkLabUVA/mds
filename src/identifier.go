@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 	"fmt"
+//	"log"
 	"github.com/buger/jsonparser"
 )
 
@@ -59,19 +60,17 @@ func (b *Backend) CreateNamespace(guid string, payload []byte) (err error) {
 
 func (b *Backend) GetNamespace(guid string) (response []byte, err error) {
 
-	ns, err := b.Mongo.FindOne(bson.D{{"_id", guid}})
+	response, err = b.Mongo.FindOne(bson.D{{"_id", guid}})
 
 	if err != nil {
 		return
 	}
 
-	response, err = json.Marshal(ns)
-
 	return
 }
 
 
-func (b *Backend) UpdateNamespace(payload []byte, guid string) (response []byte, err error) { return }
+func (b *Backend) UpdateNamespace(guid string, payload []byte) (response []byte, err error) { return }
 
 
 func (b *Backend) DeleteNamespace(guid string) (response []byte, err error) { return }
@@ -96,7 +95,7 @@ func (b *Backend) CreateIdentifier(guid string, payload []byte,  author User) (e
 
 
 	// add to stardog
-	err = b.Stardog.AddIdentifier(payload)
+	err = b.Stardog.AddIdentifier(metadata)
 	if err != nil {
 		return fmt.Errorf("Stardog Failed to Create Identifier: %s", err.Error())
 	}
@@ -131,9 +130,7 @@ func (b *Backend) GetIdentifier(guid string) (response []byte, err error) {
 		return
 	}
 
-	response, err = json.Marshal(record)
-
-	response = processMetadataRead(response)
+	response = processMetadataRead(record)
 
 	return
 }
@@ -161,6 +158,41 @@ func (b *Backend) DeleteIdentifier(guid string) (response []byte, err error) {
 
 func (b *Backend) UpdateIdentifier(guid string, update []byte) (response []byte, err error) {
 
+	// before update
+	originalIdentifier, err := b.Mongo.FindOne(bson.D{{"_id", guid}})
+	if err != nil {
+		return
+	}
+
+	updatedIdentifier, err := b.Mongo.UpdateOne(bson.D{{"_id", guid}}, update)
+	if err != nil {
+		return
+	}
+
+	// update identifier in stardog
+	transactionID, err := b.Stardog.NewTransaction()
+
+	if err != nil {
+		return
+	}
+
+	err = b.Stardog.RemoveData(transactionID, originalIdentifier, "")
+
+	err = b.Stardog.AddData(transactionID, updatedIdentifier, "")
+	if err != nil {
+		return
+	}
+
+
+
+	err = b.Stardog.Commit(transactionID)
+	if err != nil {
+		return
+	}
+
+	// if failure in stardog rollback mongo transaction
+	response = updatedIdentifier
+
 	return
 }
 
@@ -180,7 +212,7 @@ func processMetadataWrite(inputMetadata []byte, guid string, author User) (metad
 
 	// set the default context
 	// TODO: if object add property "@vocab": "http://schema.org"
-	metadata, err = jsonparser.Set(metadata, []byte(`{"@vocab": "http://schema.org"}`), "@context")
+	metadata, err = jsonparser.Set(metadata, []byte(`{"@vocab": "http://schema.org/"}`), "@context")
 	if err != nil {
 		return
 	}
@@ -241,6 +273,7 @@ func processMetadataRead(metadata []byte) []byte {
 	return metadata
 }
 
+/*
 var backend = Backend{
 	Stardog: StardogServer{
 		URI:      "http://stardog.uvadcos.io",
@@ -254,6 +287,7 @@ var backend = Backend{
 		Collection: "ids",
 	},
 }
+*/
 
 
 /*
@@ -416,20 +450,6 @@ func DeleteIdentifier(guid string) (response []byte, err error) {
 // PUBLIC -> PRIVATE|DRAFT
 // PRIVATE -> DRAFT
 func UpdateIdentifier(guid string, update []byte) (response []byte, err error) {
-	// unmarshal bson in to Bson.D
-	var updateD bson.D
-	err = bson.Unmarshal(nestedUpdate(update), &updateD)
-
-	raw, err := MS.UpdateOne(bson.D{{"_id", guid}},
-		updateD,
-		COL)
-
-	if err != nil {
-		return
-	}
-
-	response, err = bson.MarshalExtJSON(raw, false, false)
-	return
 }
 */
 

@@ -2,12 +2,15 @@ package main
 
 import (
 	"net/http"
-	//"encoding/json"
+	"log"
 	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	//"mime/multipart"
+	"mime/multipart"
+	"net/textproto"
+
+	//"encoding/json"
 )
 
 var errFailedPost = errors.New("Failed Stardog Post")
@@ -27,27 +30,52 @@ type StardogServer struct {
 func (s *StardogServer) createDatabase(databaseName string) (responseBody []byte, statusCode int, err error) {
 
 	url := s.URI + "/admin/databases"
-	//data := []byte(`{"dbname": "`+ databaseName + `", "options": {}, "files": []}`)
-	data := []byte(`{"dbname": "`+ databaseName + `"}`)
 
+	// copying python code
+	//  files = [('root', (None, json.dumps(meta), 'application/json'))]
 
-	/*
+	// payload := make(map[string]interface{})
+	// payload["dbname"] = databaseName
+	// data, _ := json.Marshal(payload)
+
+	data := []byte(`{"dbname": "`+ databaseName +`", "options": {}, "files": []}`)
+
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	writer.WriteField("dbname", databaseName)
+
+	// create the part root
+	mime := make(textproto.MIMEHeader)
+
+	mime.Add("content-type", "application/json")
+	mime.Add("content-disposition", `form-data; name="root"`)
+
+
+	root, _ := writer.CreatePart(mime)
+	//root, _ := writer.CreateFormField("root")
+	root.Write(data)
 	writer.Close()
-	*/
 
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
 		return
 	}
 
+	// log.Printf("Body Contents: %s", body.String())
+
 	req.SetBasicAuth(s.Username, s.Password)
-	req.Header.Add("Content-Type", "application/json")
+	//req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
+
+	// list all the headers
+
+	// 'Content-Type': 'multipart/form-data; boundary=c80cd0a1c48f8cd7c14f056be2200c50'
+	//req.Header.Add("Accept-Encoding", "gzip, deflate")
+	req.Header.Add("Accept", "*/*")
+	req.Header.Add("Content-Type", "multipart/form-data; boundary=" + writer.Boundary() )
+
+	log.Printf("Headers %+v", req.Header)
 
 	resp, err := client.Do(req)
 	if err != nil {

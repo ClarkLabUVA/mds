@@ -7,31 +7,39 @@ import (
 )
 
 
-func TestGeneralNested(t *testing.T) {
-	inputUpdate := []byte(`{"hello":{"world": {"goodnight": "moon"} } }`)
-	bsonUpdate := nestedUpdate(inputUpdate)
+func TestBSON(t *testing.T) {
 
-	var dotted map[string]interface{}
-	err := bson.Unmarshal(bsonUpdate, &dotted)
-	if err != nil {
-		t.Fatal("Failed to unmarshal update in dot notation", err)
-	}
+	t.Run("NestedUpdate", func(t *testing.T){
 
-	t.Logf("Unmarshaled Map: %+v", dotted)
+		inputUpdate := []byte(`{"hello":{"world": {"goodnight": "moon"} } }`)
+		bsonUpdate, err := nestedUpdate(inputUpdate)
 
-	val, ok := dotted["$set"]
+		if err != nil {
+			t.Fatalf("Failed to Preform Nested Update: %s", err.Error())
+		}
 
-	if !ok {
-		t.Fatal("dotted.$set is unset: ", val)
-	}
+		var dotted map[string]interface{}
+		err = bson.Unmarshal(bsonUpdate, &dotted)
+		if err != nil {
+			t.Fatal("Failed to unmarshal update in dot notation", err)
+		}
 
-	if reflect.ValueOf(val).Kind() != reflect.Map {
-		t.Fatal("dotted.$set is not a map", val)
-	}
+		t.Logf("Unmarshaled Map: %+v", dotted)
 
-	if moon := val.(map[string]interface{})["hello.world.goodnight"]; moon != "moon" {
-		t.Fatal("Iincorrect Value Set: ", moon)
-	}
+		val, ok := dotted["$set"]
+
+		if !ok {
+			t.Fatal("dotted.$set is unset: ", val)
+		}
+
+		if reflect.ValueOf(val).Kind() != reflect.Map {
+			t.Fatal("dotted.$set is not a map", val)
+		}
+
+		if moon := val.(map[string]interface{})["hello.world.goodnight"]; moon != "moon" {
+			t.Fatal("Iincorrect Value Set: ", moon)
+		}
+	})
 
 }
 
@@ -61,53 +69,84 @@ func TestBackend(t *testing.T) {
 		t.Fatalf("Failed CleanUp\tError: %s", cleanUpErr.Error())
 	}
 
+	// drop the testing database
+	backend.Stardog.dropDatabase("testing")
+	backend.Stardog.createDatabase("testing")
+
 
 	namespaceGUID := "ark:9999"
 	namespacePayload := []byte(`{"name": "test namespace"}`)
 
 	identifierGUID := "ark:9999/test"
 	identifierPayload := []byte(`{"@context": "https://schema.org/", "name": "test identifier", "@type": "Dataset"}`)
+	identifierUpdate := []byte(`{"name": "updated identifier", "version": 3, "newAttribute": "this is new"}`)
 
-	t.Run("CreateNamespace", func(t *testing.T) {
+	t.Run("Namespace", func(t *testing.T){
 
-		err := backend.CreateNamespace(namespaceGUID, namespacePayload)
-		if err != nil {
-			t.Fatalf("Failed to Create Namespace\tError: %s", err.Error())
-		}
+		t.Run("Create", func(t *testing.T) {
+
+			err := backend.CreateNamespace(namespaceGUID, namespacePayload)
+			if err != nil {
+				t.Fatalf("Failed to Create Namespace\tError: %s", err.Error())
+			}
+
+		})
+		t.Run("Get", func(t *testing.T) {
+			namespace, err := backend.GetNamespace(namespaceGUID)
+			if err != nil {
+				t.Fatalf("Failed to Get Namespace\tError: %s", err.Error())
+			}
+
+			t.Logf("Found Namespace with Content\t%s", string(namespace))
+		})
+
+		//t.Run("UpdateNamespace", func(t *testing.T) {})
+		//t.Run("DeleteNamespace", func(t *testing.T) {})
+
 
 	})
-	t.Run("GetNamespace", func(t *testing.T) {
-		namespace, err := backend.GetNamespace(namespaceGUID)
-		if err != nil {
-			t.Fatalf("Failed to Get Namespace\tError: %s", err.Error())
-		}
 
-		t.Logf("Found Namespace with Content\t%s", string(namespace))
+	t.Run("Identifier", func(t *testing.T){
+
+		t.Run("Create", func(t *testing.T) {
+
+			err := backend.CreateIdentifier(identifierGUID, identifierPayload, User{})
+			if err != nil {
+				t.Fatalf("Failed to Create Identifier\tError: %s", err.Error())
+			}
+
+		})
+
+		t.Run("Get", func(t *testing.T){
+			payload, err := backend.GetIdentifier(identifierGUID)
+			if err != nil {
+				t.Fatalf("Failed to Get Identifier: %s", err.Error())
+			}
+
+			t.Logf("Found Identifier: %s", string(payload))
+
+		})
+
+		t.Run("Update", func(t *testing.T){
+			response, err := backend.UpdateIdentifier(identifierGUID, identifierUpdate)
+			if err != nil {
+				t.Fatalf("Error Updating Identifier: %s", err.Error())
+			}
+			t.Logf("Updated Identifier: %s", string(response))
+
+		})
+
+		t.Run("Delete", func(t *testing.T){
+			response, err := backend.DeleteIdentifier(identifierGUID)
+			if err != nil {
+				t.Fatalf("Error Deleting Identifier: %s\nResponse: %s", err.Error(), string(response))
+			}
+
+			t.Logf("Response Deleting Identifier: %s", string(response))
+
+		})
+
 	})
-
-	//t.Run("UpdateNamespace", func(t *testing.T) {})
-	//t.Run("DeleteNamespace", func(t *testing.T) {})
-	t.Run("CreateIdentifier", func(t *testing.T) {
-
-		err := backend.CreateIdentifier(identifierGUID, identifierPayload, User{})
-		if err != nil {
-			t.Fatalf("Failed to Create Identifier\tError: %s", err.Error())
-		}
-
-	})
-	t.Run("GetIdentifier", func(t *testing.T){
-
-		payload, err := backend.GetIdentifier(identifierGUID)
-		if err != nil {
-			t.Fatalf("Failed to Get Identifier: %s", err.Error())
-		}
-
-		t.Logf("Found Identifier: %s", string(payload))
-
-	})
-	t.Run("UpdateIdentifier", func(t *testing.T){})
-
-
 
 
 }

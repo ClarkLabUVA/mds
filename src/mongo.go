@@ -8,6 +8,8 @@ import (
 	"time"
 	"encoding/json"
 	"reflect"
+	"fmt"
+	"log"
 )
 
 
@@ -50,7 +52,7 @@ func (ms MongoServer) InsertOne(record interface{}) (err error) {
 	return
 }
 
-func (ms MongoServer) FindOne(query bson.D) (record map[string]interface{}, err error) {
+func (ms MongoServer) FindOne(query bson.D) (record []byte, err error) {
 
 	// establish connection with mongo backend
 	mongoCtx, cancel, client, err := ms.connect()
@@ -60,8 +62,11 @@ func (ms MongoServer) FindOne(query bson.D) (record map[string]interface{}, err 
 		return
 	}
 
+	recordMap := make(map[string]interface{})
 	col := client.Database(ms.Database).Collection(ms.Collection)
-	err = col.FindOne(mongoCtx, query).Decode(&record)
+	err = col.FindOne(mongoCtx, query).Decode(&recordMap)
+
+	record, err = json.Marshal(recordMap)
 
 	return
 }
@@ -105,7 +110,7 @@ func (ms MongoServer) DeleteOne(query bson.D) (record map[string]interface{}, er
 	return
 }
 
-func (ms MongoServer) UpdateOne(query bson.D, update []byte) (record map[string]interface{}, err error) {
+func (ms MongoServer) UpdateOne(query bson.D, update []byte) (record []byte, err error) {
 
 	// establish connection with mongo backend
 	mongoCtx, cancel, client, err := ms.connect()
@@ -115,14 +120,27 @@ func (ms MongoServer) UpdateOne(query bson.D, update []byte) (record map[string]
 		return
 	}
 
-	var updateBson bson.D
-	err = bson.Unmarshal(nestedUpdate(update), &updateBson)
+	// nestedUpdate converts to bson
+	nested, err := nestedUpdate(update)
+	if err != nil {
+		err = fmt.Errorf(`{"message": "Failed to Convert to Nested Dot Format", "error": "%s"}`, err.Error())
+		return
+	}
 
 	col := client.Database(ms.Database).Collection(ms.Collection)
 
 	opt := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-	err = col.FindOneAndUpdate(mongoCtx, query, update, opt).Decode(&record)
+
+	rec := make(map[string]interface{})
+	err = col.FindOneAndUpdate(mongoCtx, query, nested, opt).Decode(&rec)
+
+	if err != nil {
+		err = fmt.Errorf(`{"message": "Mongo Update Operation Failed", "error": "%s"}`, err.Error())
+	}
+	record, err = json.Marshal(rec)
+
+	log.Printf(`{ "update": "%s", "bson": "%s"}` , string(nested), string(record) )
 
 	return
 }
@@ -133,10 +151,13 @@ type tuple struct {
 	Value interface{}
 }
 
-func nestedUpdate(update []byte) (bsonUpdate []byte) {
+func nestedUpdate(update []byte) (bsonUpdate []byte, err error) {
 	processedMap := make(map[string]interface{})
 	updateMap := make(map[string]interface{})
-	json.Unmarshal(update, &updateMap)
+	err = json.Unmarshal(update, &updateMap)
+	if err != nil {
+		return
+	}
 
 	resChan := make(chan tuple, 50)
 	dotConvert("", updateMap, resChan)
@@ -147,7 +168,7 @@ func nestedUpdate(update []byte) (bsonUpdate []byte) {
 			processedMap[elem.Key] = elem.Value
 		default:
 			close(resChan)
-			bsonUpdate, _ = bson.Marshal(
+			bsonUpdate, err = bson.Marshal(
 				map[string]interface{}{
 					"$set": processedMap,
 				})

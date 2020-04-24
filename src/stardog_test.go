@@ -4,58 +4,88 @@ import (
 	"testing"
 )
 
-var namedGraph = "ark:/99999/test-named-graph"
 
-var s = StardogServer{
-	URI: "http://localhost:5820",
-	Password: "admin",
-	Username: "admin",
-	Database: "testing",
-}
 
 func TestStardog(t *testing.T) {
 
 
-	t.Run("CreateIdentifier", func(t *testing.T){
-		txId, err := s.NewTransaction()
-		if err != nil {
-			t.Fatalf("Failed To Start Transaction: %s", err.Error())
-		}
+	var s = StardogServer{
+		URI: "http://localhost:5820",
+		Password: "admin",
+		Username: "admin",
+		Database: "testing",
+	}
 
-		t.Logf("Started Transaction: %s", txId)
+	t.Run("Database", func(t *testing.T){
 
-		data := []byte(`{"@id": "ark:/99999/test-data", "@context": {"@vocab": "http://schema.org/"}, "name": "test-data"}`)
-		err = s.AddData(txId, data, "")
+		t.Run("Create", func(t *testing.T){
 
-		if err != nil {
-			t.Fatalf("Transaction Failed to Add Data: %s", err.Error())
-		}
+			response, statusCode, err := s.createDatabase(s.Database)
 
-		err = s.Commit(txId)
+			if err != nil {
+				t.Fatalf("Failed to Create Database\nStatusCode: %d\nResponse: %s", statusCode, string(response))
+			}
 
-		if err != nil {
-			t.Fatalf("Failed to Commit Transaction: %s", err.Error())
-		}
+			t.Logf("Success Created Database\nStatusCode: %d\nResponse: %s", statusCode, string(response))
 
 		})
 
-	t.Run("IdentifierOperations", func(t *testing.T){
-		identifier := []byte(`{"@id": "ark:/99999/identifier-test", "@context": {"@vocab": "http://schema.org/"}, "name": "identifier-test"}`)
-		err := s.AddIdentifier(identifier)
+		t.Run("Delete", func(t *testing.T){
+			response, err := s.dropDatabase(s.Database)
 
-		if err != nil {
-			t.Fatalf("Failed to Add Identifier: %s", err.Error())
-		}
+			if err != nil {
+				t.Fatalf("Failed to Drop Database\nResponse: %s", string(response))
+			}
 
-		err = s.RemoveIdentifier(identifier)
+			t.Logf("Successfully Dropped Database\nResponse: %s", string(response))
 
-		if err != nil {
-			t.Fatalf("Failed to Add Identifier: %s", err.Error())
-		}
+		})
 	})
 
+	s.createDatabase(s.Database)
+	identifier := []byte(`{"@id": "ark:/99999/identifier-test", "@context": {"@vocab": "http://schema.org/"}, "name": "identifier-test"}`)
+	t.Run("Identifier", func(t *testing.T){
+		t.Run("Transaction", func(t *testing.T){
+			txId, err := s.NewTransaction()
+			if err != nil {
+				t.Fatalf("Failed To Start Transaction: %s", err.Error())
+			}
 
+			t.Logf("Started Transaction: %s", txId)
 
+			data := []byte(`{"@id": "ark:/99999/test-data", "@context": {"@vocab": "http://schema.org/"}, "name": "test-data"}`)
+			err = s.AddData(txId, data, "")
+
+			if err != nil {
+				t.Fatalf("Transaction Failed to Add Data: %s", err.Error())
+			}
+
+			err = s.Commit(txId)
+
+			if err != nil {
+				t.Fatalf("Failed to Commit Transaction: %s", err.Error())
+			}
+
+			})
+
+		t.Run("Create", func(t *testing.T){
+			err := s.AddIdentifier(identifier)
+
+			if err != nil {
+				t.Fatalf("Failed to Add Identifier: %s", err.Error())
+			}
+		})
+
+		t.Run("Delete", func(t *testing.T){
+				err := s.RemoveIdentifier(identifier)
+
+				if err != nil {
+					t.Fatalf("Failed to Add Identifier: %s", err.Error())
+				}
+			})
+	})
+
+	// var namedGraph = "ark:/99999/test-named-graph"
 	/*
 	t.Run("NamedGraph", func(t *testing.T){
 
