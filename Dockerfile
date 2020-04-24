@@ -4,21 +4,12 @@ FROM golang:latest
 #COPY bin/go1.14.linux-amd64.tar.gz .
 #RUN tar -xf go1.14.linux-amd64.tar.gz && rm go1.14.linux-amd64.tar.gz
 
-ENV PATH=$PATH:/go/bin
-ENV GOPATH=/usr/go
-
-RUN go get go.mongodb.org/mongo-driver/mongo \
- go.mongodb.org/mongo-driver/bson \
- github.com/satori/go.uuid \
- github.com/gorilla/mux \
- github.com/urfave/negroni \
- github.com/buger/jsonparser
-
 WORKDIR /mds
-COPY src/ mds/.
+COPY cmd/ cmd/
+COPY pkg/ pkg/
+COPY go.mod .
 
-RUN go build -o mds src/.
-
+RUN go build -o mds cmd/mds/main.go
 EXPOSE 80
 
-ENTRYPOINT ["./main"]
+ENTRYPOINT ["./mds"]
