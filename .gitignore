@@ -1,9 +1,1 @@
-.DS_Store
-src/mds/*.swp
-src/mds/mds
-deprecated/*
-./ipynb_checkpoints/*
-*.ipynb
 bin/*
-notes.md
-mds
