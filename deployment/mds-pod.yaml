@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+    namespace: ors
+    name: mds
+    labels:
+        app: mds
+spec:
+    containers:
+    - name: mds
+      image: jackofsum/mds

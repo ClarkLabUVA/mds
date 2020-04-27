@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: ors
+  name: stardog
+  labels:
+    app: stardog
+spec:
+  containers:
+  - name: stardog
+    image: stardog/stardog
