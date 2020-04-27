@@ -4,15 +4,12 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 	"net/http"
-
 	"log"
-//	"os"
-
+	"os"
 	"encoding/json"
 	"github.com/google/uuid"
 	"io/ioutil"
 	"strings"
-
 	"github.com/ClarkLabUVA/mds/pkg/identifier"
 )
 
@@ -21,19 +18,7 @@ var server identifier.Backend
 
 func init() {
 
-
-	/*
-	mongoURI, exists := os.LookupEnv("MONGO_URI")
-	if exists {
-		MS.URI = mongoURI
-	}
-
-	mongoDB, exists := os.LookupEnv("MONGO_DB")
-	if exists {
-		MS.Database = mongoDB
-	}
-	*/
-
+	// set server to defaults for local testing
 	server = identifier.Backend{
 		Stardog: identifier.StardogServer{
 			URI:      "http://localhost:5820",
@@ -46,6 +31,36 @@ func init() {
 			Database: "ors",
 			Collection: "ids",
 		},
+	}
+
+	// if Environent Variables options are set, update backend server configuration
+	if mongoURI, exists := os.LookupEnv("MONGO_URI"); exists {
+		server.Mongo.URI = mongoURI
+		log.Printf("Setting ")
+	}
+
+	if mongoDB, exists := os.LookupEnv("MONGO_DB"); exists {
+		server.Mongo.Database = mongoDB
+	}
+
+	if mongoCol, exists := os.LookupEnv("MONGO_COL"); exists {
+		server.Mongo.Collection = mongoCol
+	}
+
+	if stardogURI, exists := os.LookupEnv("STARDOG_URI"); exists {
+		server.Stardog.URI = stardogURI
+	}
+
+	if stardogDB, exists := os.LookupEnv("STARDOG_URI"); exists {
+		server.Stardog.Database = stardogDB
+	}
+
+	if stardogPassword, exists := os.LookupEnv("STARDOG_PASSWORD"); exists {
+		server.Stardog.Password = stardogPassword
+	}
+
+	if stardogUsername, exists := os.LookupEnv("STARDOG_USERNAME"); exists {
+		server.Stardog.Username = stardogUsername
 	}
 
 	server.Stardog.CreateDatabase(server.Stardog.Database)
