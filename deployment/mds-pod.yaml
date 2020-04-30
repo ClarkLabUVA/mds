@@ -12,5 +12,15 @@ spec:
       env:
       - name: MONGO_URI
         value: mongodb://mongoadmin:mongosecret@mongo:27017
+      - name: MONGO_DB
+        value: ors
+      - name: MONGO_COL
+        value: ids
       - name: STARDOG_URI
         value: http://stardog:5820
+      - name: STARDOG_PASSWORD
+        value: admin
+      - name: STARDOG_USERNAME
+        value: admin
+      - name: STARDOG_DATABASE
+        value: ors
