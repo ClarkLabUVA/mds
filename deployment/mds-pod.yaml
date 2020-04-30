@@ -9,3 +9,8 @@ spec:
     containers:
     - name: mds
       image: jackofsum/mds
+      env:
+      - name: MONGO_URI
+        value: mongodb://mongoadmin:mongosecret@mongo:27017
+      - name: STARDOG_URI
+        value: http://stardog:5820
