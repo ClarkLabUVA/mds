@@ -36,7 +36,6 @@ func init() {
 	// if Environent Variables options are set, update backend server configuration
 	if mongoURI, exists := os.LookupEnv("MONGO_URI"); exists {
 		server.Mongo.URI = mongoURI
-		log.Printf("Setting ")
 	}
 
 	if mongoDB, exists := os.LookupEnv("MONGO_DB"); exists {
@@ -65,6 +64,12 @@ func init() {
 
 	server.Stardog.CreateDatabase(server.Stardog.Database)
 
+	// Log Initilization Variables
+	log.Printf("StardogURI: %s\tStardogUsername\tStardogPassword: %s\tStardogDatabase: %s",
+		server.Stardog.URI, server.Stardog.Username, server.Stardog.Password, server.Stardog.Database)
+
+	log.Printf("MongoURI: %s\tMongoDatabase: %s\tMongoCollection: %s",
+		server.Mongo.URI, server.Mongo.Database, server.Mongo.Collection)
 
 }
 
