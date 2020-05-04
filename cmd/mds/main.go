@@ -65,7 +65,7 @@ func init() {
 	server.Stardog.CreateDatabase(server.Stardog.Database)
 
 	// Log Initilization Variables
-	log.Printf("StardogURI: %s\tStardogUsername\tStardogPassword: %s\tStardogDatabase: %s",
+	log.Printf("StardogURI: %s\tStardogUsername: %s\tStardogPassword: %s\tStardogDatabase: %s",
 		server.Stardog.URI, server.Stardog.Username, server.Stardog.Password, server.Stardog.Database)
 
 	log.Printf("MongoURI: %s\tMongoDatabase: %s\tMongoCollection: %s",
