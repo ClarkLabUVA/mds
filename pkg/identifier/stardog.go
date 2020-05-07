@@ -11,10 +11,17 @@ import (
 	"net/textproto"
 
 	//"encoding/json"
+	"github.com/rs/zerolog"
+	"os"
 )
 
-var errFailedPost = errors.New("Failed Stardog Post")
-var errTXFailed = errors.New("Transaction Failed")
+var stardogLogger = zerolog.New(os.Stderr).With().Timestamp().Str("backend", "stardog").Logger()
+
+var (
+	errFailedPost = errors.New("Failed Stardog Post")
+	errTXFailed = errors.New("Transaction Failed")
+)
+
 var jsonLD = "application/ld+json"
 
 type StardogServer struct {
@@ -30,13 +37,6 @@ type StardogServer struct {
 func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte, statusCode int, err error) {
 
 	url := s.URI + "/admin/databases"
-
-	// copying python code
-	//  files = [('root', (None, json.dumps(meta), 'application/json'))]
-
-	// payload := make(map[string]interface{})
-	// payload["dbname"] = databaseName
-	// data, _ := json.Marshal(payload)
 
 	data := []byte(`{"dbname": "`+ databaseName +`", "options": {}, "files": []}`)
 
@@ -58,6 +58,11 @@ func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte
 
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "createDatabase")
+			Msg("failed to acquire http request")
+
 		return
 	}
 
@@ -68,23 +73,29 @@ func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte
 
 	client := &http.Client{}
 
-	// list all the headers
-
 	// 'Content-Type': 'multipart/form-data; boundary=c80cd0a1c48f8cd7c14f056be2200c50'
 	//req.Header.Add("Accept-Encoding", "gzip, deflate")
 	req.Header.Add("Accept", "*/*")
 	req.Header.Add("Content-Type", "multipart/form-data; boundary=" + writer.Boundary() )
 
-	log.Printf("Headers %+v", req.Header)
-
 	resp, err := client.Do(req)
 	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "createDatabase").
+			Msg("failed to preform request")
+
 		return
 	}
 
 	responseBody, _ = ioutil.ReadAll(resp.Body)
-	statusCode = resp.StatusCode
 
+	stardogLogger.Info().
+		Str("operation", "createDatabase").
+		Str("url", url).
+		Int("statusCode", resp.StatusCode).
+		Bytes("response", responseBody).
+		Msg("preformed create database")
 
 	return
 
