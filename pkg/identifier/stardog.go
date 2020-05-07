@@ -135,7 +135,7 @@ func (s *StardogServer) DropDatabase(databaseName string) (response []byte, err 
 		Str("operation", "dropDatabase").
 		Str("url", url).
 		Int("statusCode", resp.StatusCode).
-		Bytes("response", responseBody).
+		Bytes("response", response).
 		Msg("preformed create database")
 
 	return
@@ -208,12 +208,12 @@ func (s *StardogServer) NewTransaction() (t string, err error) {
 	response, _ = ioutil.ReadAll(resp.Body)
 	t = string(response)
 
-	stardogLogger.Info()
-		.Str("operation", "newTransaction").
-		.Str("url", url).
-		.Str("resp", response.StatusCode).
-		.Str("transaction", t).
-		.Msg("created transaction")
+	stardogLogger.Info().
+		Str("operation", "newTransaction").
+		Str("url", url).
+		Str("resp", response.StatusCode).
+		Str("transaction", t).
+		Msg("created transaction")
 
 	return
 
