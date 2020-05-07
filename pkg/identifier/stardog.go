@@ -108,7 +108,8 @@ func (s *StardogServer) DropDatabase(databaseName string) (response []byte, err 
 	if err != nil {
 		stardogLogger.Error().
 			Err(err).
-			Str("operation", "dropDatabase")
+			Str("operation", "dropDatabase").
+			Str("url", url).
 			Msg("failed to acquire http request")
 		return
 	}
@@ -122,6 +123,7 @@ func (s *StardogServer) DropDatabase(databaseName string) (response []byte, err 
 		stardogLogger.Error().
 			Err(err).
 			Str("operation", "dropDatabase").
+			Str("url", url).
 			Msg("failed to preform request")
 
 		return
