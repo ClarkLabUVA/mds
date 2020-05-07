@@ -82,6 +82,11 @@ func init() {
 		).
 		Msg("initilization variables for server")
 
+	// create the default ark namespace
+
+	payload := []byte(`{"@id": "ark:99999", "name": "test namespace"}`)
+	server.CreateNamespace("ark:99999", payload)
+
 }
 
 func main() {
