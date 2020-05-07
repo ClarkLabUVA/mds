@@ -2,7 +2,6 @@ package identifier
 
 import (
 	"net/http"
-	"log"
 	"bytes"
 	"errors"
 	"fmt"
@@ -104,7 +103,7 @@ func (s *StardogServer) DropDatabase(databaseName string) (response []byte, err 
 	url := s.URI + "/admin/databases/" + databaseName
 
 
-	req, err := http.NewRequest("POST", url)
+	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		stardogLogger.Error().
 			Err(err).
@@ -180,7 +179,7 @@ func (s *StardogServer) NewTransaction() (t string, err error) {
 	url := s.URI + "/" + s.Database + "/transaction/begin"
 
 
-	req, err := http.NewRequest("POST", url)
+	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		stardogLogger.Error().
 			Err(err).
@@ -205,13 +204,13 @@ func (s *StardogServer) NewTransaction() (t string, err error) {
 		return
 	}
 
-	response, _ = ioutil.ReadAll(resp.Body)
+	response, _ := ioutil.ReadAll(resp.Body)
 	t = string(response)
 
 	stardogLogger.Info().
 		Str("operation", "newTransaction").
 		Str("url", url).
-		Str("resp", response.StatusCode).
+		Int("resp", resp.StatusCode).
 		Str("transaction", t).
 		Msg("created transaction")
 
@@ -236,6 +235,7 @@ func (s *StardogServer) RemoveData(txId string, data []byte, namedGraphURI strin
 		stardogLogger.Error().
 			Err(err).
 			Str("operation", "removeData").
+			Str("transaction", txId).
 			Str("url", url).
 			Str("data", string(data)).
 			Msg("failed to acquire http request")
@@ -251,6 +251,7 @@ func (s *StardogServer) RemoveData(txId string, data []byte, namedGraphURI strin
 		stardogLogger.Error().
 			Err(err).
 			Str("operation", "removeData").
+			Str("transaction", txId).
 			Str("url", url).
 			Str("data", string(data)).
 			Msg("failed to preform request")
@@ -258,14 +259,15 @@ func (s *StardogServer) RemoveData(txId string, data []byte, namedGraphURI strin
 		return
 	}
 
-	response, _ = ioutil.ReadAll(resp.Body)
+	response, _ := ioutil.ReadAll(resp.Body)
 
 	stardogLogger.Info().
 		Str("operation", "removeData").
+		Str("transaction", txId).
 		Str("url", url).
 		Str("data", string(data)).
-		Str("statusCode", resp.StatusCode).
-		Str("responseBody", response).
+		Int("statusCode", resp.StatusCode).
+		Str("responseBody", string(response)).
 		Msg("created transaction")
 
 	return
@@ -288,6 +290,7 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 		stardogLogger.Error().
 			Err(err).
 			Str("operation", "addData").
+			Str("transaction", txId).
 			Str("url", url).
 			Str("data", string(data)).
 			Msg("failed to acquire http request")
@@ -303,6 +306,7 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 		stardogLogger.Error().
 			Err(err).
 			Str("operation", "addData").
+			Str("transaction", txId).
 			Str("url", url).
 			Str("data", string(data)).
 			Msg("failed to preform request")
@@ -310,14 +314,15 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 		return
 	}
 
-	response, _ = ioutil.ReadAll(resp.Body)
+	response, _ := ioutil.ReadAll(resp.Body)
 
 	stardogLogger.Info().
 		Str("operation", "addData").
+		Str("transaction", txId).
 		Str("url", url).
 		Str("data", string(data)).
-		Str("statusCode", resp.StatusCode).
-		Str("responseBody", response).
+		Int("statusCode", resp.StatusCode).
+		Str("responseBody", string(response)).
 		Msg("created transaction")
 
 	return
@@ -332,7 +337,7 @@ func (s *StardogServer) Commit(txId string) (err error) {
 	url := s.URI + "/" + s.Database + "/transaction/commit/" + txId
 
 
-	req, err := http.NewRequest("POST", url)
+	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		stardogLogger.Error().
 			Err(err).
@@ -359,15 +364,14 @@ func (s *StardogServer) Commit(txId string) (err error) {
 		return
 	}
 
-	response, _ = ioutil.ReadAll(resp.Body)
-	t = string(response)
+	response, _ := ioutil.ReadAll(resp.Body)
 
 	stardogLogger.Info().
 		Str("operation", "commitTransaction").
 		Str("transaction", txId).
 		Str("url", url).
-		Str("resp", response.StatusCode).
-		Str("transaction", t).
+		Int("resp", resp.StatusCode).
+		Str("response", string(response)).
 		Msg("created transaction")
 
 	return
