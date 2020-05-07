@@ -228,7 +228,45 @@ func (s *StardogServer) RemoveData(txId string, data []byte, namedGraphURI strin
 		url = url + "?graph-uri=" + namedGraphURI
 	}
 
-	_, err = s.request(url, "POST", data)
+	body := &bytes.Buffer{}
+	body.Write(data)
+
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "removeData").
+			Str("url", url).
+			Str("data", string(data)).
+			Msg("failed to acquire http request")
+		return
+	}
+
+	req.SetBasicAuth(s.Username, s.Password)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "removeData").
+			Str("url", url).
+			Str("data", string(data)).
+			Msg("failed to preform request")
+
+		return
+	}
+
+	response, _ = ioutil.ReadAll(resp.Body)
+
+	stardogLogger.Info().
+		Str("operation", "removeData").
+		Str("url", url).
+		Str("data", string(data)).
+		Str("statusCode", resp.StatusCode).
+		Str("responseBody", response).
+		Msg("created transaction")
 
 	return
 }
@@ -242,7 +280,47 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 		url = url + "?graph-uri=" + namedGraphURI
 	}
 
-	_, err = s.request(url, "POST", data)
+	body := &bytes.Buffer{}
+	body.Write(data)
+
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "addData").
+			Str("url", url).
+			Str("data", string(data)).
+			Msg("failed to acquire http request")
+		return
+	}
+
+	req.SetBasicAuth(s.Username, s.Password)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "addData").
+			Str("url", url).
+			Str("data", string(data)).
+			Msg("failed to preform request")
+
+		return
+	}
+
+	response, _ = ioutil.ReadAll(resp.Body)
+
+	stardogLogger.Info().
+		Str("operation", "addData").
+		Str("url", url).
+		Str("data", string(data)).
+		Str("statusCode", resp.StatusCode).
+		Str("responseBody", response).
+		Msg("created transaction")
+
+	return
 
 	return
 
@@ -252,7 +330,46 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 func (s *StardogServer) Commit(txId string) (err error) {
 
 	url := s.URI + "/" + s.Database + "/transaction/commit/" + txId
-	_, err = s.request(url, "POST", nil)
+
+
+	req, err := http.NewRequest("POST", url)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "commitTransaction").
+			Str("transaction", txId).
+			Str("url", url).
+			Msg("failed to acquire http request")
+		return
+	}
+
+	req.SetBasicAuth(s.Username, s.Password)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "commitTransaction").
+			Str("transaction", txId).
+			Str("url", url).
+			Msg("failed to preform request")
+
+		return
+	}
+
+	response, _ = ioutil.ReadAll(resp.Body)
+	t = string(response)
+
+	stardogLogger.Info().
+		Str("operation", "commitTransaction").
+		Str("transaction", txId).
+		Str("url", url).
+		Str("resp", response.StatusCode).
+		Str("transaction", t).
+		Msg("created transaction")
+
 	return
 
 }
