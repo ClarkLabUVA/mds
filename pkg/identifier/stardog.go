@@ -179,8 +179,42 @@ func (s *StardogServer) NewTransaction() (t string, err error) {
 
 	url := s.URI + "/" + s.Database + "/transaction/begin"
 
-	txId, err := s.request(url, "POST", nil)
-	t = string(txId)
+
+	req, err := http.NewRequest("POST", url)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "newTransaction").
+			Str("url", url).
+			Msg("failed to acquire http request")
+		return
+	}
+
+	req.SetBasicAuth(s.Username, s.Password)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "newTransaction").
+			Str("url", url).
+			Msg("failed to preform request")
+
+		return
+	}
+
+	response, _ = ioutil.ReadAll(resp.Body)
+	t = string(response)
+
+	stardogLogger.Info()
+		.Str("operation", "newTransaction").
+		.Str("url", url).
+		.Str("resp", response.StatusCode).
+		.Str("transaction", t).
+		.Msg("created transaction")
+
 	return
 
 }
