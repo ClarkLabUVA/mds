@@ -4,13 +4,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 	"net/http"
-	"log"
 	"os"
 	"encoding/json"
 	"github.com/google/uuid"
 	"io/ioutil"
 	"strings"
 	"github.com/ClarkLabUVA/mds/pkg/identifier"
+
+	"log"
+	"github.com/rs/zerolog"
+	zlog "github.com/rs/zerolog/log"
 )
 
 
@@ -65,11 +68,19 @@ func init() {
 	server.Stardog.CreateDatabase(server.Stardog.Database)
 
 	// Log Initilization Variables
-	log.Printf("StardogURI: %s\tStardogUsername: %s\tStardogPassword: %s\tStardogDatabase: %s",
-		server.Stardog.URI, server.Stardog.Username, server.Stardog.Password, server.Stardog.Database)
-
-	log.Printf("MongoURI: %s\tMongoDatabase: %s\tMongoCollection: %s",
-		server.Mongo.URI, server.Mongo.Database, server.Mongo.Collection)
+	zlog.Info().
+		Dict("stardog", zerolog.Dict().
+			Str("uri", server.Stardog.URI).
+			Str("username", server.Stardog.Username).
+			Str("password", server.Stardog.Password).
+			Str("database", server.Stardog.Database),
+		).
+		Dict("mongo", zerolog.Dict().
+			Str("uri", server.Mongo.URI).
+			Str("database", server.Mongo.Database).
+			Str("collection", server.Mongo.Collection),
+		).
+		Msg("initilization variables for server")
 
 }
 
