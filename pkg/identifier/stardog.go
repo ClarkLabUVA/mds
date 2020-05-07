@@ -104,7 +104,40 @@ func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte
 func (s *StardogServer) DropDatabase(databaseName string) (response []byte, err error) {
 
 	url := s.URI + "/admin/databases/" + databaseName
-	response, err = s.request(url, "DELETE", nil)
+
+
+	req, err := http.NewRequest("POST", url)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "dropDatabase")
+			Msg("failed to acquire http request")
+		return
+	}
+
+	req.SetBasicAuth(s.Username, s.Password)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "dropDatabase").
+			Msg("failed to preform request")
+
+		return
+	}
+
+	response, _ = ioutil.ReadAll(resp.Body)
+
+	stardogLogger.Info().
+		Str("operation", "dropDatabase").
+		Str("url", url).
+		Int("statusCode", resp.StatusCode).
+		Bytes("response", responseBody).
+		Msg("preformed create database")
+
 	return
 
 }
