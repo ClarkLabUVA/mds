@@ -60,29 +60,27 @@ func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte
 	if err != nil {
 		stardogLogger.Error().
 			Err(err).
-			Str("operation", "createDatabase")
+			Str("operation", "createDatabase").
+			Str("url", url).
 			Msg("failed to acquire http request")
 
 		return
 	}
 
-	// log.Printf("Body Contents: %s", body.String())
-
 	req.SetBasicAuth(s.Username, s.Password)
-	//req.Header.Add("Content-Type", "application/json")
 
-	client := &http.Client{}
-
-	// 'Content-Type': 'multipart/form-data; boundary=c80cd0a1c48f8cd7c14f056be2200c50'
-	//req.Header.Add("Accept-Encoding", "gzip, deflate")
+	// Set Headers
 	req.Header.Add("Accept", "*/*")
 	req.Header.Add("Content-Type", "multipart/form-data; boundary=" + writer.Boundary() )
+
+	client := &http.Client{}
 
 	resp, err := client.Do(req)
 	if err != nil {
 		stardogLogger.Error().
 			Err(err).
 			Str("operation", "createDatabase").
+			Str("url", url).
 			Msg("failed to preform request")
 
 		return
