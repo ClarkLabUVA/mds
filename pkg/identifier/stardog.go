@@ -243,8 +243,11 @@ func (s *StardogServer) RemoveData(txId string, data []byte, namedGraphURI strin
 	}
 
 	req.SetBasicAuth(s.Username, s.Password)
+	req.Header.Add("Content-Type", "application/ld+json")
 
 	client := &http.Client{}
+
+
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -298,10 +301,12 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 	}
 
 	req.SetBasicAuth(s.Username, s.Password)
+	req.Header.Add("Content-Type", "application/ld+json")
 
 	client := &http.Client{}
 
 	resp, err := client.Do(req)
+
 	if err != nil {
 		stardogLogger.Error().
 			Err(err).
