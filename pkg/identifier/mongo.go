@@ -273,7 +273,7 @@ func (ms MongoServer) UpdateOne(query bson.D, update []byte) (record []byte, err
 		Bytes("update", update).
 		Bytes("nested", nested).
 		Interface("record", record).
-		Msg("failed UpdateOne operation in mongo")
+		Msg("succeeded UpdateOne operation in mongo")
 
 	return
 }
