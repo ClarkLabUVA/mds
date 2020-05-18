@@ -19,7 +19,7 @@ import (
 
 var server identifier.Backend
 
-func init() {
+func main() {
 
 	// set server to defaults for local testing
 	server = identifier.Backend{
@@ -53,7 +53,7 @@ func init() {
 		server.Stardog.URI = stardogURI
 	}
 
-	if stardogDB, exists := os.LookupEnv("STARDOG_URI"); exists {
+	if stardogDB, exists := os.LookupEnv("STARDOG_DATABASE"); exists {
 		server.Stardog.Database = stardogDB
 	}
 
@@ -65,7 +65,6 @@ func init() {
 		server.Stardog.Username = stardogUsername
 	}
 
-	server.Stardog.CreateDatabase(server.Stardog.Database)
 
 	// Log Initilization Variables
 	zlog.Info().
@@ -82,14 +81,13 @@ func init() {
 		).
 		Msg("initilization variables for server")
 
+	server.Stardog.CreateDatabase(server.Stardog.Database)
+
 	// create the default ark namespace
 
 	payload := []byte(`{"@id": "ark:99999", "name": "test namespace"}`)
 	server.CreateNamespace("ark:99999", payload)
 
-}
-
-func main() {
 
 	r := mux.NewRouter().StrictSlash(false)
 
