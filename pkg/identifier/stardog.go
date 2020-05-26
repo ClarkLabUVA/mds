@@ -193,7 +193,7 @@ func (s *StardogServer) NewTransaction() (t string, err error) {
 
 	client := &http.Client{}
 
-	resp, err := client.Do(req)
+	response, err := client.Do(req)
 	if err != nil {
 		stardogLogger.Error().
 			Err(err).
@@ -204,13 +204,14 @@ func (s *StardogServer) NewTransaction() (t string, err error) {
 		return
 	}
 
-	response, _ := ioutil.ReadAll(resp.Body)
+	responseBody, _ := ioutil.ReadAll(response.Body)
 	t = string(response)
 
 	stardogLogger.Info().
 		Str("operation", "newTransaction").
 		Str("url", url).
-		Int("resp", resp.StatusCode).
+		Int("statusCode", response.StatusCode).
+		Str("responseBody", string(responseBody)).
 		Str("transaction", t).
 		Msg("created transaction")
 
@@ -249,7 +250,7 @@ func (s *StardogServer) RemoveData(txId string, data []byte, namedGraphURI strin
 
 
 
-	resp, err := client.Do(req)
+	response, err := client.Do(req)
 	if err != nil {
 		stardogLogger.Error().
 			Err(err).
@@ -262,15 +263,15 @@ func (s *StardogServer) RemoveData(txId string, data []byte, namedGraphURI strin
 		return
 	}
 
-	response, _ := ioutil.ReadAll(resp.Body)
+	responseBody, _ := ioutil.ReadAll(response.Body)
 
 	stardogLogger.Info().
 		Str("operation", "removeData").
 		Str("transaction", txId).
 		Str("url", url).
 		Str("data", string(data)).
-		Int("statusCode", resp.StatusCode).
-		Str("responseBody", string(response)).
+		Int("statusCode", onse.StatusCode).
+		Str("responseBody", string(responseBody)).
 		Msg("created transaction")
 
 	return
@@ -305,7 +306,7 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 
 	client := &http.Client{}
 
-	resp, err := client.Do(req)
+	response, err := client.Do(req)
 
 	if err != nil {
 		stardogLogger.Error().
@@ -319,15 +320,15 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 		return
 	}
 
-	response, _ := ioutil.ReadAll(resp.Body)
+	responseBody, _ := ioutil.ReadAll(response.Body)
 
 	stardogLogger.Info().
 		Str("operation", "addData").
 		Str("transaction", txId).
 		Str("url", url).
 		Str("data", string(data)).
-		Int("statusCode", resp.StatusCode).
-		Str("responseBody", string(response)).
+		Int("statusCode", response.StatusCode).
+		Str("responseBody", string(responseBody)).
 		Msg("created transaction")
 
 	return
@@ -357,7 +358,7 @@ func (s *StardogServer) Commit(txId string) (err error) {
 
 	client := &http.Client{}
 
-	resp, err := client.Do(req)
+	response, err := client.Do(req)
 	if err != nil {
 		stardogLogger.Error().
 			Err(err).
@@ -369,43 +370,16 @@ func (s *StardogServer) Commit(txId string) (err error) {
 		return
 	}
 
-	response, _ := ioutil.ReadAll(resp.Body)
+	responseBody, _ := ioutil.ReadAll(response.Body)
 
 	stardogLogger.Info().
 		Str("operation", "commitTransaction").
 		Str("transaction", txId).
 		Str("url", url).
-		Int("resp", resp.StatusCode).
-		Str("response", string(response)).
+		Int("statusCode", response.StatusCode).
+		Str("responseBody", string(response)).
 		Msg("created transaction")
 
 	return
 
-}
-
-func (s *StardogServer) request(url string, method string, data []byte) (responseBody []byte, err error) {
-
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(data))
-	if err != nil {
-		return
-	}
-
-	req.SetBasicAuth(s.Username, s.Password)
-	req.Header.Add("Content-Type", jsonLD)
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return
-	}
-
-	if resp.StatusCode == 200 {
-		responseBody, _ = ioutil.ReadAll(resp.Body)
-		return
-	}
-
-	responseBody, _ = ioutil.ReadAll(resp.Body)
-	err = fmt.Errorf("%w: %s\tStatusCode: %d\tResponse:%s", errFailedPost, url, resp.StatusCode, responseBody)
-	return
 }
