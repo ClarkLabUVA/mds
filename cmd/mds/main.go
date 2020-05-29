@@ -4,19 +4,22 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 	"net/http"
-	"log"
 	"os"
 	"encoding/json"
 	"github.com/google/uuid"
 	"io/ioutil"
 	"strings"
 	"github.com/ClarkLabUVA/mds/pkg/identifier"
+
+	"log"
+	"github.com/rs/zerolog"
+	zlog "github.com/rs/zerolog/log"
 )
 
 
 var server identifier.Backend
 
-func init() {
+func main() {
 
 	// set server to defaults for local testing
 	server = identifier.Backend{
@@ -50,7 +53,7 @@ func init() {
 		server.Stardog.URI = stardogURI
 	}
 
-	if stardogDB, exists := os.LookupEnv("STARDOG_URI"); exists {
+	if stardogDB, exists := os.LookupEnv("STARDOG_DATABASE"); exists {
 		server.Stardog.Database = stardogDB
 	}
 
@@ -62,18 +65,29 @@ func init() {
 		server.Stardog.Username = stardogUsername
 	}
 
-	server.Stardog.CreateDatabase(server.Stardog.Database)
 
 	// Log Initilization Variables
-	log.Printf("StardogURI: %s\tStardogUsername: %s\tStardogPassword: %s\tStardogDatabase: %s",
-		server.Stardog.URI, server.Stardog.Username, server.Stardog.Password, server.Stardog.Database)
+	zlog.Info().
+		Dict("stardog", zerolog.Dict().
+			Str("uri", server.Stardog.URI).
+			Str("username", server.Stardog.Username).
+			Str("password", server.Stardog.Password).
+			Str("database", server.Stardog.Database),
+		).
+		Dict("mongo", zerolog.Dict().
+			Str("uri", server.Mongo.URI).
+			Str("database", server.Mongo.Database).
+			Str("collection", server.Mongo.Collection),
+		).
+		Msg("initilization variables for server")
 
-	log.Printf("MongoURI: %s\tMongoDatabase: %s\tMongoCollection: %s",
-		server.Mongo.URI, server.Mongo.Database, server.Mongo.Collection)
+	server.Stardog.CreateDatabase(server.Stardog.Database)
 
-}
+	// create the default ark namespace
 
-func main() {
+	payload := []byte(`{"@id": "ark:99999", "name": "test namespace"}`)
+	server.CreateNamespace("ark:99999", payload)
+
 
 	r := mux.NewRouter().StrictSlash(false)
 

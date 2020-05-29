@@ -2,7 +2,6 @@ package identifier
 
 import (
 	"net/http"
-	"log"
 	"bytes"
 	"errors"
 	"fmt"
@@ -11,10 +10,17 @@ import (
 	"net/textproto"
 
 	//"encoding/json"
+	"github.com/rs/zerolog"
+	"os"
 )
 
-var errFailedPost = errors.New("Failed Stardog Post")
-var errTXFailed = errors.New("Transaction Failed")
+var stardogLogger = zerolog.New(os.Stderr).With().Timestamp().Str("backend", "stardog").Logger()
+
+var (
+	errFailedPost = errors.New("Failed Stardog Post")
+	errTXFailed = errors.New("Transaction Failed")
+)
+
 var jsonLD = "application/ld+json"
 
 type StardogServer struct {
@@ -30,13 +36,6 @@ type StardogServer struct {
 func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte, statusCode int, err error) {
 
 	url := s.URI + "/admin/databases"
-
-	// copying python code
-	//  files = [('root', (None, json.dumps(meta), 'application/json'))]
-
-	// payload := make(map[string]interface{})
-	// payload["dbname"] = databaseName
-	// data, _ := json.Marshal(payload)
 
 	data := []byte(`{"dbname": "`+ databaseName +`", "options": {}, "files": []}`)
 
@@ -58,33 +57,42 @@ func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte
 
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "createDatabase").
+			Str("url", url).
+			Msg("failed to acquire http request")
+
 		return
 	}
 
-	// log.Printf("Body Contents: %s", body.String())
-
 	req.SetBasicAuth(s.Username, s.Password)
-	//req.Header.Add("Content-Type", "application/json")
 
-	client := &http.Client{}
-
-	// list all the headers
-
-	// 'Content-Type': 'multipart/form-data; boundary=c80cd0a1c48f8cd7c14f056be2200c50'
-	//req.Header.Add("Accept-Encoding", "gzip, deflate")
+	// Set Headers
 	req.Header.Add("Accept", "*/*")
 	req.Header.Add("Content-Type", "multipart/form-data; boundary=" + writer.Boundary() )
 
-	log.Printf("Headers %+v", req.Header)
+	client := &http.Client{}
 
 	resp, err := client.Do(req)
 	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "createDatabase").
+			Str("url", url).
+			Msg("failed to preform request")
+
 		return
 	}
 
 	responseBody, _ = ioutil.ReadAll(resp.Body)
-	statusCode = resp.StatusCode
 
+	stardogLogger.Info().
+		Str("operation", "createDatabase").
+		Str("url", url).
+		Int("statusCode", resp.StatusCode).
+		Bytes("response", responseBody).
+		Msg("preformed create database")
 
 	return
 
@@ -93,7 +101,42 @@ func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte
 func (s *StardogServer) DropDatabase(databaseName string) (response []byte, err error) {
 
 	url := s.URI + "/admin/databases/" + databaseName
-	response, err = s.request(url, "DELETE", nil)
+
+
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "dropDatabase").
+			Str("url", url).
+			Msg("failed to acquire http request")
+		return
+	}
+
+	req.SetBasicAuth(s.Username, s.Password)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "dropDatabase").
+			Str("url", url).
+			Msg("failed to preform request")
+
+		return
+	}
+
+	response, _ = ioutil.ReadAll(resp.Body)
+
+	stardogLogger.Info().
+		Str("operation", "dropDatabase").
+		Str("url", url).
+		Int("statusCode", resp.StatusCode).
+		Bytes("response", response).
+		Msg("preformed create database")
+
 	return
 
 }
@@ -135,8 +178,43 @@ func (s *StardogServer) NewTransaction() (t string, err error) {
 
 	url := s.URI + "/" + s.Database + "/transaction/begin"
 
-	txId, err := s.request(url, "POST", nil)
-	t = string(txId)
+
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "newTransaction").
+			Str("url", url).
+			Msg("failed to acquire http request")
+		return
+	}
+
+	req.SetBasicAuth(s.Username, s.Password)
+
+	client := &http.Client{}
+
+	response, err := client.Do(req)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "newTransaction").
+			Str("url", url).
+			Msg("failed to preform request")
+
+		return
+	}
+
+	responseBody, _ := ioutil.ReadAll(response.Body)
+	t = string(response)
+
+	stardogLogger.Info().
+		Str("operation", "newTransaction").
+		Str("url", url).
+		Int("statusCode", response.StatusCode).
+		Str("responseBody", string(responseBody)).
+		Str("transaction", t).
+		Msg("created transaction")
+
 	return
 
 }
@@ -150,7 +228,51 @@ func (s *StardogServer) RemoveData(txId string, data []byte, namedGraphURI strin
 		url = url + "?graph-uri=" + namedGraphURI
 	}
 
-	_, err = s.request(url, "POST", data)
+	body := &bytes.Buffer{}
+	body.Write(data)
+
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "removeData").
+			Str("transaction", txId).
+			Str("url", url).
+			Str("data", string(data)).
+			Msg("failed to acquire http request")
+		return
+	}
+
+	req.SetBasicAuth(s.Username, s.Password)
+	req.Header.Add("Content-Type", "application/ld+json")
+
+	client := &http.Client{}
+
+
+
+	response, err := client.Do(req)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "removeData").
+			Str("transaction", txId).
+			Str("url", url).
+			Str("data", string(data)).
+			Msg("failed to preform request")
+
+		return
+	}
+
+	responseBody, _ := ioutil.ReadAll(response.Body)
+
+	stardogLogger.Info().
+		Str("operation", "removeData").
+		Str("transaction", txId).
+		Str("url", url).
+		Str("data", string(data)).
+		Int("statusCode", onse.StatusCode).
+		Str("responseBody", string(responseBody)).
+		Msg("created transaction")
 
 	return
 }
@@ -164,7 +286,52 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 		url = url + "?graph-uri=" + namedGraphURI
 	}
 
-	_, err = s.request(url, "POST", data)
+	body := &bytes.Buffer{}
+	body.Write(data)
+
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "addData").
+			Str("transaction", txId).
+			Str("url", url).
+			Str("data", string(data)).
+			Msg("failed to acquire http request")
+		return
+	}
+
+	req.SetBasicAuth(s.Username, s.Password)
+	req.Header.Add("Content-Type", "application/ld+json")
+
+	client := &http.Client{}
+
+	response, err := client.Do(req)
+
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "addData").
+			Str("transaction", txId).
+			Str("url", url).
+			Str("data", string(data)).
+			Msg("failed to preform request")
+
+		return
+	}
+
+	responseBody, _ := ioutil.ReadAll(response.Body)
+
+	stardogLogger.Info().
+		Str("operation", "addData").
+		Str("transaction", txId).
+		Str("url", url).
+		Str("data", string(data)).
+		Int("statusCode", response.StatusCode).
+		Str("responseBody", string(responseBody)).
+		Msg("created transaction")
+
+	return
 
 	return
 
@@ -174,34 +341,45 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 func (s *StardogServer) Commit(txId string) (err error) {
 
 	url := s.URI + "/" + s.Database + "/transaction/commit/" + txId
-	_, err = s.request(url, "POST", nil)
-	return
 
-}
 
-func (s *StardogServer) request(url string, method string, data []byte) (responseBody []byte, err error) {
-
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "commitTransaction").
+			Str("transaction", txId).
+			Str("url", url).
+			Msg("failed to acquire http request")
 		return
 	}
 
 	req.SetBasicAuth(s.Username, s.Password)
-	req.Header.Add("Content-Type", jsonLD)
 
 	client := &http.Client{}
 
-	resp, err := client.Do(req)
+	response, err := client.Do(req)
 	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "commitTransaction").
+			Str("transaction", txId).
+			Str("url", url).
+			Msg("failed to preform request")
+
 		return
 	}
 
-	if resp.StatusCode == 200 {
-		responseBody, _ = ioutil.ReadAll(resp.Body)
-		return
-	}
+	responseBody, _ := ioutil.ReadAll(response.Body)
 
-	responseBody, _ = ioutil.ReadAll(resp.Body)
-	err = fmt.Errorf("%w: %s\tStatusCode: %d\tResponse:%s", errFailedPost, url, resp.StatusCode, responseBody)
+	stardogLogger.Info().
+		Str("operation", "commitTransaction").
+		Str("transaction", txId).
+		Str("url", url).
+		Int("statusCode", response.StatusCode).
+		Str("responseBody", string(response)).
+		Msg("created transaction")
+
 	return
+
 }
