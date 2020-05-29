@@ -8,7 +8,7 @@ metadata:
 spec:
     containers:
     - name: mds
-      image: jackofsum/mds
+      image: jackofsum/mds:0.1.0
       env:
       - name: MONGO_URI
         value: mongodb://mongoadmin:mongosecret@mongo:27017

@@ -3,25 +3,6 @@ kind: Pod
 metadata:
         name: stardog
 spec:
-<<<<<<< HEAD
   containers:
   - name: stardog
     image: jackofsum/stardog
-=======
-        containers:
-        - name: stardog
-          image: stardog/stardog:latest
-          volumeMounts:
-                  - name: config-volume
-                    mountPath: /opt/mount/
-          env:
-                  - name: STARDOG_LICENSE_PATH
-                    value: /opt/mount/stardog-license-key.bin
-        volumes:
-        - name: config-volume
-          configMap:
-                  name: stardog-license
-                  items:
-                          - key: stardog-license-key.bin
-                            path: stardog-license-key.bin
->>>>>>> 0c350f170ab51de79470ffc9bb549eb3340e7889
