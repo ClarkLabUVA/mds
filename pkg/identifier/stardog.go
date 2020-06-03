@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"mime/multipart"
 	"net/textproto"
@@ -205,13 +204,12 @@ func (s *StardogServer) NewTransaction() (t string, err error) {
 	}
 
 	responseBody, _ := ioutil.ReadAll(response.Body)
-	t = string(response)
+	t = string(responseBody)
 
 	stardogLogger.Info().
 		Str("operation", "newTransaction").
 		Str("url", url).
 		Int("statusCode", response.StatusCode).
-		Str("responseBody", string(responseBody)).
 		Str("transaction", t).
 		Msg("created transaction")
 
@@ -270,7 +268,7 @@ func (s *StardogServer) RemoveData(txId string, data []byte, namedGraphURI strin
 		Str("transaction", txId).
 		Str("url", url).
 		Str("data", string(data)).
-		Int("statusCode", onse.StatusCode).
+		Int("statusCode", response.StatusCode).
 		Str("responseBody", string(responseBody)).
 		Msg("created transaction")
 
@@ -377,7 +375,7 @@ func (s *StardogServer) Commit(txId string) (err error) {
 		Str("transaction", txId).
 		Str("url", url).
 		Int("statusCode", response.StatusCode).
-		Str("responseBody", string(response)).
+		Str("responseBody", string(responseBody)).
 		Msg("created transaction")
 
 	return
