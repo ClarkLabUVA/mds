@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Pod
-metadata:
-        name: stardog
-spec:
-  containers:
-  - name: stardog
-    image: jackofsum/stardog
