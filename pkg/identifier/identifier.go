@@ -3,12 +3,12 @@ package identifier
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	bson "go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
 	"strings"
 	"time"
-	"fmt"
-//	"log"
+	//	"log"
 	"github.com/buger/jsonparser"
 )
 
@@ -21,11 +21,10 @@ var ErrMissingProp = errors.New("Instance is missing required properties")
 var ErrJSONUnmarshal = errors.New("Failed to Unmarshal JSON")
 
 type Backend struct {
-	Mongo	MongoServer
-	Stardog	StardogServer
+	Mongo      MongoServer
+	Stardog    StardogServer
 	useStardog bool
 }
-
 
 func (b *Backend) CreateNamespace(guid string, payload []byte) (err error) {
 
@@ -57,7 +56,6 @@ func (b *Backend) CreateNamespace(guid string, payload []byte) (err error) {
 	return
 }
 
-
 func (b *Backend) GetNamespace(guid string) (response []byte, err error) {
 
 	response, err = b.Mongo.FindOne(bson.D{{"_id", guid}})
@@ -69,14 +67,11 @@ func (b *Backend) GetNamespace(guid string) (response []byte, err error) {
 	return
 }
 
-
 func (b *Backend) UpdateNamespace(guid string, payload []byte) (response []byte, err error) { return }
-
 
 func (b *Backend) DeleteNamespace(guid string) (response []byte, err error) { return }
 
-
-func (b *Backend) CreateIdentifier(guid string, payload []byte,  author User) (err error) {
+func (b *Backend) CreateIdentifier(guid string, payload []byte, author User) (err error) {
 
 	guidSplit := strings.Split(guid, "/")
 	_, err = b.GetNamespace(guidSplit[0])
@@ -91,8 +86,6 @@ func (b *Backend) CreateIdentifier(guid string, payload []byte,  author User) (e
 	}
 
 	// TODO validate identifier metadata
-
-
 
 	// add to stardog
 	err = b.Stardog.AddIdentifier(metadata)
@@ -121,7 +114,6 @@ func (b *Backend) CreateIdentifier(guid string, payload []byte,  author User) (e
 	return
 }
 
-
 func (b *Backend) GetIdentifier(guid string) (response []byte, err error) {
 
 	record, err := b.Mongo.FindOne(bson.D{{"_id", guid}})
@@ -134,7 +126,6 @@ func (b *Backend) GetIdentifier(guid string) (response []byte, err error) {
 
 	return
 }
-
 
 func (b *Backend) DeleteIdentifier(guid string) (response []byte, err error) {
 
@@ -154,7 +145,6 @@ func (b *Backend) DeleteIdentifier(guid string) (response []byte, err error) {
 	return
 
 }
-
 
 func (b *Backend) UpdateIdentifier(guid string, update []byte) (response []byte, err error) {
 
@@ -183,8 +173,6 @@ func (b *Backend) UpdateIdentifier(guid string, update []byte) (response []byte,
 		return
 	}
 
-
-
 	err = b.Stardog.Commit(transactionID)
 	if err != nil {
 		return
@@ -196,16 +184,15 @@ func (b *Backend) UpdateIdentifier(guid string, update []byte) (response []byte,
 	return
 }
 
-
 func processMetadataWrite(inputMetadata []byte, guid string, author User) (metadata []byte, err error) {
 
 	// set @id
-	metadata, err = jsonparser.Set(inputMetadata, []byte(`"`+ guid +`"`), "@id")
+	metadata, err = jsonparser.Set(inputMetadata, []byte(`"`+guid+`"`), "@id")
 	if err != nil {
 		return
 	}
 
-	metadata, err = jsonparser.Set(metadata, []byte(`"`+ guid +`"`), "_id")
+	metadata, err = jsonparser.Set(metadata, []byte(`"`+guid+`"`), "_id")
 	if err != nil {
 		return
 	}
@@ -224,39 +211,33 @@ func processMetadataWrite(inputMetadata []byte, guid string, author User) (metad
 		return
 	}
 
-
 	// set url
-	metadata, err = jsonparser.Set(metadata, []byte(`"http://ors.uvadcos.io/` + guid + `"`), "url")
+	metadata, err = jsonparser.Set(metadata, []byte(`"http://ors.uvadcos.io/`+guid+`"`), "url")
 	if err != nil {
 		return
 	}
 
-
 	// fill in author
 	if author.ID != "" {
-		metadata, err = jsonparser.Set(metadata, []byte(`"`+ author.ID +`"`), "sdPublisher", "@id")
+		metadata, err = jsonparser.Set(metadata, []byte(`"`+author.ID+`"`), "sdPublisher", "@id")
 		if err != nil {
 			return
 		}
 	}
-
 
 	if author.Name != "" {
-		metadata, err = jsonparser.Set(metadata, []byte(`"`+ author.Name +`"`), "sdPublisher", "name")
+		metadata, err = jsonparser.Set(metadata, []byte(`"`+author.Name+`"`), "sdPublisher", "name")
 		if err != nil {
 			return
 		}
 	}
-
 
 	// set sdPublicationDate
 	now, err := time.Now().MarshalJSON()
 	metadata, err = jsonparser.Set(metadata, now, "sdPublicationDate")
 
-
 	// TODO if not set default to "version": 1
 	// metadata["version"] = 1
-
 
 	return
 }
@@ -268,7 +249,6 @@ func processMetadataRead(metadata []byte) []byte {
 
 	// delete namespace properties namespace
 	metadata = jsonparser.Delete(metadata, "namespace")
-
 
 	return metadata
 }
@@ -288,7 +268,6 @@ var backend = Backend{
 	},
 }
 */
-
 
 /*
 func CreateNamespace(payload []byte, guid string) (err error) {

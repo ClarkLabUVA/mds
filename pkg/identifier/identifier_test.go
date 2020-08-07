@@ -6,10 +6,9 @@ import (
 	"testing"
 )
 
-
 func TestBSON(t *testing.T) {
 
-	t.Run("NestedUpdate", func(t *testing.T){
+	t.Run("NestedUpdate", func(t *testing.T) {
 
 		inputUpdate := []byte(`{"hello":{"world": {"goodnight": "moon"} } }`)
 		bsonUpdate, err := nestedUpdate(inputUpdate)
@@ -53,12 +52,11 @@ func TestBackend(t *testing.T) {
 			Database: "testing",
 		},
 		Mongo: MongoServer{
-			URI:      "mongodb://mongoadmin:mongosecret@localhost:27017",
-			Database: "ors",
+			URI:        "mongodb://mongoadmin:mongosecret@localhost:27017",
+			Database:   "ors",
 			Collection: "test",
 		},
 	}
-
 
 	// drop the test database from mongo
 	ctx, cancel, client, _ := backend.Mongo.connect()
@@ -73,7 +71,6 @@ func TestBackend(t *testing.T) {
 	backend.Stardog.dropDatabase("testing")
 	backend.Stardog.createDatabase("testing")
 
-
 	namespaceGUID := "ark:9999"
 	namespacePayload := []byte(`{"name": "test namespace"}`)
 
@@ -81,7 +78,7 @@ func TestBackend(t *testing.T) {
 	identifierPayload := []byte(`{"@context": "https://schema.org/", "name": "test identifier", "@type": "Dataset"}`)
 	identifierUpdate := []byte(`{"name": "updated identifier", "version": 3, "newAttribute": "this is new"}`)
 
-	t.Run("Namespace", func(t *testing.T){
+	t.Run("Namespace", func(t *testing.T) {
 
 		t.Run("Create", func(t *testing.T) {
 
@@ -103,10 +100,9 @@ func TestBackend(t *testing.T) {
 		//t.Run("UpdateNamespace", func(t *testing.T) {})
 		//t.Run("DeleteNamespace", func(t *testing.T) {})
 
-
 	})
 
-	t.Run("Identifier", func(t *testing.T){
+	t.Run("Identifier", func(t *testing.T) {
 
 		t.Run("Create", func(t *testing.T) {
 
@@ -117,7 +113,7 @@ func TestBackend(t *testing.T) {
 
 		})
 
-		t.Run("Get", func(t *testing.T){
+		t.Run("Get", func(t *testing.T) {
 			payload, err := backend.GetIdentifier(identifierGUID)
 			if err != nil {
 				t.Fatalf("Failed to Get Identifier: %s", err.Error())
@@ -127,7 +123,7 @@ func TestBackend(t *testing.T) {
 
 		})
 
-		t.Run("Update", func(t *testing.T){
+		t.Run("Update", func(t *testing.T) {
 			response, err := backend.UpdateIdentifier(identifierGUID, identifierUpdate)
 			if err != nil {
 				t.Fatalf("Error Updating Identifier: %s", err.Error())
@@ -136,7 +132,7 @@ func TestBackend(t *testing.T) {
 
 		})
 
-		t.Run("Delete", func(t *testing.T){
+		t.Run("Delete", func(t *testing.T) {
 			response, err := backend.DeleteIdentifier(identifierGUID)
 			if err != nil {
 				t.Fatalf("Error Deleting Identifier: %s\nResponse: %s", err.Error(), string(response))
@@ -147,7 +143,6 @@ func TestBackend(t *testing.T) {
 		})
 
 	})
-
 
 }
 

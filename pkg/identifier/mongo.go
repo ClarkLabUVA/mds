@@ -1,14 +1,14 @@
 package identifier
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	bson "go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"context"
-	"time"
-	"encoding/json"
 	"reflect"
-	"fmt"
+	"time"
 
 	"github.com/rs/zerolog"
 	"os"
@@ -19,11 +19,10 @@ var (
 )
 
 type MongoServer struct {
-	URI      string
-	Database string
+	URI        string
+	Database   string
 	Collection string
 }
-
 
 func (ms MongoServer) connect() (ctx context.Context, cancel context.CancelFunc, client *mongo.Client, err error) {
 
@@ -71,10 +70,10 @@ func (ms MongoServer) InsertOne(record interface{}) (err error) {
 
 	}
 
-		mongoLogger.Info().
-			Str("operation", "InsertOne").
-			Interface("record", record).
-			Msg("created record in mongo")
+	mongoLogger.Info().
+		Str("operation", "InsertOne").
+		Interface("record", record).
+		Msg("created record in mongo")
 
 	return
 }
@@ -99,7 +98,6 @@ func (ms MongoServer) FindOne(query bson.D) (record []byte, err error) {
 	col := client.Database(ms.Database).Collection(ms.Collection)
 	err = col.FindOne(mongoCtx, query).Decode(&recordMap)
 
-
 	if err != nil {
 		mongoLogger.Error().
 			Err(err).
@@ -107,7 +105,7 @@ func (ms MongoServer) FindOne(query bson.D) (record []byte, err error) {
 			Interface("query", query).
 			Msg("error finding document in mongo")
 
-			return
+		return
 	}
 
 	record, err = json.Marshal(recordMap)
@@ -247,7 +245,6 @@ func (ms MongoServer) UpdateOne(query bson.D, update []byte) (record []byte, err
 
 	opt := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-
 	rec := make(map[string]interface{})
 	err = col.FindOneAndUpdate(mongoCtx, query, nested, opt).Decode(&rec)
 
@@ -266,7 +263,6 @@ func (ms MongoServer) UpdateOne(query bson.D, update []byte) (record []byte, err
 
 	record, err = json.Marshal(rec)
 
-
 	mongoLogger.Info().
 		Str("operation", "UpdateOne").
 		Interface("query", query).
@@ -277,7 +273,6 @@ func (ms MongoServer) UpdateOne(query bson.D, update []byte) (record []byte, err
 
 	return
 }
-
 
 type tuple struct {
 	Key   string

@@ -1,11 +1,11 @@
 package identifier
 
 import (
-	"net/http"
 	"bytes"
 	"errors"
 	"io/ioutil"
 	"mime/multipart"
+	"net/http"
 	"net/textproto"
 
 	//"encoding/json"
@@ -17,26 +17,25 @@ var stardogLogger = zerolog.New(os.Stderr).With().Timestamp().Str("backend", "st
 
 var (
 	errFailedPost = errors.New("Failed Stardog Post")
-	errTXFailed = errors.New("Transaction Failed")
+	errTXFailed   = errors.New("Transaction Failed")
 )
 
 var jsonLD = "application/ld+json"
 
 type StardogServer struct {
-	URI      string
-	Password string
-	Username string
-	Database string
-	ValidationURI	string
+	URI           string
+	Password      string
+	Username      string
+	Database      string
+	ValidationURI string
 }
-
 
 // TODO: Fix Request Can't Find
 func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte, statusCode int, err error) {
 
 	url := s.URI + "/admin/databases"
 
-	data := []byte(`{"dbname": "`+ databaseName +`", "options": {}, "files": []}`)
+	data := []byte(`{"dbname": "` + databaseName + `", "options": {}, "files": []}`)
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -47,12 +46,10 @@ func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte
 	mime.Add("content-type", "application/json")
 	mime.Add("content-disposition", `form-data; name="root"`)
 
-
 	root, _ := writer.CreatePart(mime)
 	//root, _ := writer.CreateFormField("root")
 	root.Write(data)
 	writer.Close()
-
 
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
@@ -69,7 +66,7 @@ func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte
 
 	// Set Headers
 	req.Header.Add("Accept", "*/*")
-	req.Header.Add("Content-Type", "multipart/form-data; boundary=" + writer.Boundary() )
+	req.Header.Add("Content-Type", "multipart/form-data; boundary="+writer.Boundary())
 
 	client := &http.Client{}
 
@@ -100,7 +97,6 @@ func (s *StardogServer) CreateDatabase(databaseName string) (responseBody []byte
 func (s *StardogServer) DropDatabase(databaseName string) (response []byte, err error) {
 
 	url := s.URI + "/admin/databases/" + databaseName
-
 
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
@@ -177,7 +173,6 @@ func (s *StardogServer) NewTransaction() (t string, err error) {
 
 	url := s.URI + "/" + s.Database + "/transaction/begin"
 
-
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		stardogLogger.Error().
@@ -245,8 +240,6 @@ func (s *StardogServer) RemoveData(txId string, data []byte, namedGraphURI strin
 	req.Header.Add("Content-Type", "application/ld+json")
 
 	client := &http.Client{}
-
-
 
 	response, err := client.Do(req)
 	if err != nil {
@@ -339,7 +332,6 @@ func (s *StardogServer) AddData(txId string, data []byte, namedGraphURI string) 
 func (s *StardogServer) Commit(txId string) (err error) {
 
 	url := s.URI + "/" + s.Database + "/transaction/commit/" + txId
-
 
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
