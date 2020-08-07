@@ -18,8 +18,8 @@ func AuthMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 	// read bearer token from request
 	authHeader := strings.TrimPrefix(
 		r.Header.Get("Authorization"),
-		"Bearer"
-	)
+		"Bearer",
+		)
 
 
 	// if bearer token doesn't exist
@@ -30,6 +30,9 @@ func AuthMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 	}
 
 	// call authorization service
+
+	client := &http.Client{}
+
 	req, err := http.NewRequest("POST", AuthInspect, nil)
 
 
@@ -39,7 +42,7 @@ func AuthMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 		return
 	}
 
-	res, err := http.Do(req)
+	res, err := client.Do(req)
 
 	// if there is an error in preforming the service call
 	if err != nil {
@@ -52,7 +55,7 @@ func AuthMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 		// Call the next handler 
 		next(w, r)
 	} else {
-		w.Write([]byte(`{"error": "user not authorized"}`)
+		w.Write([]byte(`{"error": "user not authorized"}`))
 		w.WriteHeader(401)
 		return
 	}
