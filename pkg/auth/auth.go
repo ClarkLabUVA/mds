@@ -2,7 +2,6 @@ package auth
 
 import (
 	"net/http"
-	"strings"
 )
 
 var (
@@ -16,10 +15,7 @@ var (
 func AuthMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 	// read bearer token from request
-	authHeader := strings.TrimPrefix(
-		r.Header.Get("Authorization"),
-		"Bearer",
-		)
+	authHeader := r.Header.Get("Authorization")
 
 
 	// if bearer token doesn't exist
@@ -35,6 +31,7 @@ func AuthMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 
 	req, err := http.NewRequest("POST", AuthInspect, nil)
 
+	req.Header.Set("Authorization",  authHeader)
 
 	if err != nil {
 		w.Write([]byte(`{"error": "error creating http request"`))
