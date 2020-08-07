@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"github.com/ClarkLabUVA/mds/pkg/identifier"
+	"github.com/ClarkLabUVA/mds/pkg/auth"
 
 	"log"
 	"github.com/rs/zerolog"
@@ -93,6 +94,8 @@ func main() {
 
 	n := negroni.New()
 
+
+
 	r.HandleFunc("/ark:{prefix}", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			if r.Method == "POST" {
@@ -158,6 +161,7 @@ func main() {
 		}))
 
 	n.UseHandler(r)
+	n.Use(negroni.HandlerFunc(auth.AuthMiddleware))
 
 	log.Fatal(http.ListenAndServe(":80", n))
 
