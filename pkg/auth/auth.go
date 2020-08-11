@@ -15,14 +15,24 @@ var (
 func AuthMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 	// read bearer token from request
-	authHeader := r.Header.Get("Authorization")
+    var authHeader string
 
+	authHeader = r.Header.Get("Authorization")
 
 	// if bearer token doesn't exist
 	if authHeader == "" {
-		w.Write([]byte(`{"error": "missing Authorization bearer token"`))
-		w.WriteHeader(400)
-		return
+
+        // check cookies of reqest
+        authCookie, err := r.Cookie("fairscapeAuth") 
+
+        if err != nil {
+            w.Write([]byte(`{"error": "request missing authorization token"}`))
+            w.WriteHeader(400)
+            return
+        }
+
+        authHeader = authCookie.Value
+        
 	}
 
 	// call authorization service
