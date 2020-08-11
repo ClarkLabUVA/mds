@@ -160,8 +160,8 @@ func main() {
 			w.Write([]byte(`{"status": "ok"}`))
 		}))
 
-	n.UseHandler(r)
 	n.Use(negroni.HandlerFunc(auth.AuthMiddleware))
+	n.UseHandler(r)
 
 	log.Fatal(http.ListenAndServe(":80", n))
 
