@@ -8,7 +8,6 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/urfave/negroni"
 	"net/http"
 	"os"
 	"github.com/ClarkLabUVA/mds/pkg/identifier"
@@ -94,9 +93,6 @@ func main() {
 
 	r := mux.NewRouter().StrictSlash(false)
 
-	n := negroni.New()
-
-
 
 	r.HandleFunc("/ark:{prefix}", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -162,9 +158,8 @@ func main() {
 			w.Write([]byte(`{"status": "ok"}`))
 		}))
 
-	n.Use(negroni.HandlerFunc(identifier.AuthMiddleware))
-	n.UseHandler(r)
+	r.Use(identifier.AuthMiddleware)
 
-	log.Fatal(http.ListenAndServe(":80", n))
+	log.Fatal(http.ListenAndServe(":80", r))
 
 }

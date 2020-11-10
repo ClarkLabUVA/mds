@@ -29,8 +29,6 @@ type Backend struct {
 	Mongo      MongoServer
 	Stardog    StardogServer
 	useStardog bool
-	useAuth    bool 
-	authURI	   string
 }
 
 func (b *Backend) CreateNamespace(guid string, payload []byte) (err error) {
