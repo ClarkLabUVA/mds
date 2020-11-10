@@ -7,9 +7,14 @@ import (
     "os"
     "context"
     "io/ioutil"
-    "fmt"
     "encoding/json"
-    "log"
+
+    "fmt"
+    "github.com/rs/zerolog"
+)
+
+var (
+    authLogger = zerolog.New(os.Stderr).With().Timestamp().Str("backend", "auth").Logger()
 )
 
 var jwtSecret  []byte
@@ -126,7 +131,7 @@ func AuthMiddleware (next http.Handler) http.Handler {
 
             if err != nil {
                 w.Write([]byte(`{"error": "request missing authorization token"}`))
-                w.WriteHeader(400)
+                w.WriteHeader(403)
                 return
             }
 
@@ -143,9 +148,24 @@ func AuthMiddleware (next http.Handler) http.Handler {
             return jwtSecret, nil
         })
 
+        // error handling for token error
+        if err != nil {
+
+            authLogger.Error().
+                Err(err).
+                Msg("Error Parsing Token")
+
+            
+            w.Write([]byte(`{"message": "invalid token", "error": "`+ err.Error() + `"}`))        
+            w.WriteHeader(401)
+            return
+        }
+
         claims := userToken.Claims.(*UserTokenClaims)
 
-        log.Printf("AuthMiddleware [Unpacked Claims from Token] %v+", claims)
+        authLogger.Info().
+            Str("claims", fmt.Sprintf("%v+", claims)).
+            Msg("Claims from Token")
 
         u := User{
             ID: claims.Subject,
@@ -156,17 +176,20 @@ func AuthMiddleware (next http.Handler) http.Handler {
             Groups: claims.Groups,
         }
 
-        log.Printf("AuthMiddleware [Unpacked User] %v+", u)
+        authLogger.Info().
+            Dict("user", 
+                zerolog.Dict().
+                    Str("ID", u.ID).
+                    Str("Name", u.Name).
+                    Str("Email", u.Email).
+                    Str("Role", u.Role).
+                    Interface("Groups", u.Groups),
+                ).
+            Msg("User Data from Claims")
 
-        // error handling for token error
-        if err != nil {
-            w.Write([]byte(`{"message": "invalid token", "error": "`+ err.Error() + `"}`))        
-            w.WriteHeader(401)
-            return
-        }
 
         // take token and put into context
-        ctx := context.WithValue(r.Context(), u, "user")
+        ctx := context.WithValue(r.Context(), "user", u)
 
         // Call the next handler 
         next.ServeHTTP(w, r.WithContext(ctx))
