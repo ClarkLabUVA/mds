@@ -1,7 +1,8 @@
 package identifier
 
 import (
-	"strings"
+    "strings"
+    "bytes"
 	"net/http"
     "github.com/dgrijalva/jwt-go"
     "os"
@@ -209,7 +210,7 @@ type Resource struct {
 //AuthGetACL queries the ACL for the specified resource at the auth service
 func AuthGetACL(id string) (r Resource, err error) {
 
-    resourceURL := authURI + "/" + id
+    resourceURL := authURI + "/resource/" + id
 
     response, err := http.Get(resourceURL)
 
@@ -235,3 +236,45 @@ func AuthGetACL(id string) (r Resource, err error) {
     return
     
 }
+
+
+//AuthCreateACL inserts the 
+func AuthCreateACL(id string, u User) (err error) {
+
+    resourceURL := authURI + "/resource/" + id
+
+    r := Resource{
+        ID: id,
+        Owner: u.ID,
+    }
+
+    resourceBytes, err :=  json.Marshal(r)
+
+    if err != nil {
+        err = fmt.Errorf("AuthCreateACL: Failed to marshal resource (%w)", err)
+        return
+    }
+
+    requestBody := bytes.NewReader(resourceBytes)
+
+    response, err := http.Post(resourceURL, "application/json", requestBody)
+
+
+    body, _ := ioutil.ReadAll(response.Body)
+
+    authLogger.Info().
+        Int("status code", response.StatusCode).
+        Str("body", string(body)).
+        Msg("Create ACL request")
+
+    if err != nil {
+        err = fmt.Errorf("AuthCreateACL: Failed to preform http request (%w)", err)
+        return
+    }
+
+    if response.StatusCode != 201 {
+        err = fmt.Errorf("AuthCreateACL: request to create an ACL failed (%w)", err)
+    }
+
+    return
+} 

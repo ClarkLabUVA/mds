@@ -150,6 +150,7 @@ func (b *Backend) ArkCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// extract user from request context
 	var u User
+	var err error
 	contextUser := r.Context().Value("user")
 	u = contextUser.(User)
 	
@@ -163,6 +164,15 @@ func (b *Backend) ArkCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	splitPath := strings.Split(guid, "/")
 	namespace := splitPath[0]
+
+	// create resource in auth service
+	err = AuthCreateACL(guid, u)
+
+	// if error is found in the auth service
+	if err != nil {
+		serveJSON(w, 500, map[string]interface{}{"error": err.Error(), "message": "Error registering ACL for identifier"})
+		return
+	}
 
 	// read in response from request
 	bodyBytes, err := ioutil.ReadAll(r.Body)
@@ -224,6 +234,15 @@ func (b *Backend) ArkMintHandler(w http.ResponseWriter, r *http.Request) {
 
 	// append to identifier
 	guid := "ark:" + vars["prefix"] + "/" + identifierUUID.String()
+
+	// create resource in auth service
+	err = AuthCreateACL(guid, u)
+
+	// if error is found in the auth service
+	if err != nil {
+		serveJSON(w, 500, map[string]interface{}{"error": err.Error(), "message": "Error registering ACL for identifier"})
+		return
+	}
 	
 	// store identifier record
 	err = b.CreateIdentifier(guid, bodyBytes, u)

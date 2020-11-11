@@ -85,12 +85,6 @@ func main() {
 
 	server.Stardog.CreateDatabase(server.Stardog.Database)
 
-	// create the default ark namespace
-
-	payload := []byte(`{"@id": "ark:99999", "name": "test namespace"}`)
-	server.CreateNamespace("ark:99999", payload)
-
-
 	r := mux.NewRouter().StrictSlash(false)
 
 
