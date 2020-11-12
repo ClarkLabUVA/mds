@@ -215,14 +215,14 @@ func AuthGetACL(id string) (r Resource, err error) {
     response, err := http.Get(resourceURL)
 
     if err != nil {
-        err = fmt.Errorf("AuthGetACL: Failed to Get Resource (%w)", err)
+        err = fmt.Errorf("AuthGetACL: Failed to Get Resource %w", err)
         return
     }
 
     responseBody, err := ioutil.ReadAll(response.Body)
 
     if err != nil {
-        err = fmt.Errorf("AuthGetACL: Error Reading Auth Service Response (%w)", err)
+        err = fmt.Errorf("AuthGetACL: Error Reading Auth Service Response %w", err)
         return
     }
 
@@ -230,7 +230,7 @@ func AuthGetACL(id string) (r Resource, err error) {
     err = json.Unmarshal(responseBody, &r)
 
     if err != nil {
-        err = fmt.Errorf("AuthGetACL: Error Unmarshaling Auth Service Response (%w)", err)
+        err = fmt.Errorf("AuthGetACL: Error Unmarshaling Auth Service Response %w", err)
     }
 
     return
@@ -241,7 +241,7 @@ func AuthGetACL(id string) (r Resource, err error) {
 //AuthCreateACL inserts the 
 func AuthCreateACL(id string, u User) (err error) {
 
-    resourceURL := authURI + "/resource/" + id
+    resourceURL := authURI + "/resource"
 
     r := Resource{
         ID: id,
@@ -251,7 +251,7 @@ func AuthCreateACL(id string, u User) (err error) {
     resourceBytes, err :=  json.Marshal(r)
 
     if err != nil {
-        err = fmt.Errorf("AuthCreateACL: Failed to marshal resource (%w)", err)
+        err = fmt.Errorf("AuthCreateACL: Failed to marshal resource %w", err)
         return
     }
 
@@ -268,12 +268,12 @@ func AuthCreateACL(id string, u User) (err error) {
         Msg("Create ACL request")
 
     if err != nil {
-        err = fmt.Errorf("AuthCreateACL: Failed to preform http request (%w)", err)
+        err = fmt.Errorf("AuthCreateACL: Failed to preform http request %w", err)
         return
     }
 
     if response.StatusCode != 201 {
-        err = fmt.Errorf("AuthCreateACL: request to create an ACL failed (%w)", err)
+        err = fmt.Errorf("AuthCreateACL: request to create an ACL failed %w", err)
     }
 
     return
