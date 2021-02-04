@@ -7,12 +7,14 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
 	"os"
+
 	"github.com/ClarkLabUVA/mds/pkg/identifier"
+	"github.com/gorilla/mux"
 
 	"log"
+
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
 )
@@ -152,8 +154,6 @@ func main() {
 			w.Write([]byte(`{"status": "ok"}`))
 		}))
 
-	r.Use(identifier.AuthMiddleware)
-
-	log.Fatal(http.ListenAndServe(":80", r))
+	log.Fatal(http.ListenAndServe(":8080", r))
 
 }
