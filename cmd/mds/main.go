@@ -147,6 +147,15 @@ func main() {
 			}
 		}))
 
+	// resolve prefix for ARK syntax
+	r.PathPrefix("/ark:/{prefix}/{suffix}").Handler(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == "GET" {
+				server.ArkResolveHandler(w, r)
+				return
+			}
+		}))
+
 	r.HandleFunc("/", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(200)
