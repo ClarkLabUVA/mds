@@ -10,14 +10,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"time"
 	bson "go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"reflect"
-	"time"
-
-	"github.com/rs/zerolog"
 	"os"
+	"github.com/rs/zerolog"
 )
 
 var (
@@ -28,41 +27,48 @@ type MongoServer struct {
 	URI        string
 	Database   string
 	Collection string
+    Client *mongo.Client
 }
 
-func (ms MongoServer) connect() (ctx context.Context, cancel context.CancelFunc, client *mongo.Client, err error) {
+func (ms MongoServer) Connect(clientContext context.Context) (client *mongo.Client, err error) {
 
 	// establish connection with mongo backend
-	client, err = mongo.NewClient(options.Client().ApplyURI(ms.URI))
-	if err != nil {
-		return
-	}
 
-	// create a context for the connection
-	ctx, cancel = context.WithTimeout(context.Background(), 20*time.Second)
+    opt := options.Client().ApplyURI(ms.URI).SetMaxConnIdleTime(0).SetMaxPoolSize(1000)
+
+	client, err = mongo.NewClient(opt)
+
+    if err != nil {
+        // log error for failing to connect
+        mongoLogger.Error().
+            Err(err).
+            Str("operation", "ConnectMongo").
+            Msg("Failed client creation")
+
+        return
+    }
 
 	// connect to the client
-	err = client.Connect(ctx)
+	err = client.Connect(clientContext)
+
+    if err != nil {
+        // log error for failing to connect
+        mongoLogger.Error().
+            Err(err).
+            Str("operation", "ConnectMongo").
+            Msg("Client failed to connect to mongo")
+    }
+
 	return
 }
 
 func (ms MongoServer) InsertOne(record interface{}) (err error) {
 
-	// establish connection with mongo backend
-	mongoCtx, cancel, client, err := ms.connect()
-	defer cancel()
+    // create a new context for the operation
+    mongoCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
 
-	if err != nil {
-		// log error for failing to connect
-		mongoLogger.Error().
-			Err(err).
-			Str("operation", "InsertOne").
-			Msg("failed connection to mongo")
-
-		return
-	}
-
-	col := client.Database(ms.Database).Collection(ms.Collection)
+	col := ms.Client.Database(ms.Database).Collection(ms.Collection)
 	_, err = col.InsertOne(mongoCtx, record)
 
 	if err != nil {
@@ -73,7 +79,6 @@ func (ms MongoServer) InsertOne(record interface{}) (err error) {
 			Msg("failed insert one operation to mongo")
 
 		return
-
 	}
 
 	mongoLogger.Info().
@@ -86,22 +91,12 @@ func (ms MongoServer) InsertOne(record interface{}) (err error) {
 
 func (ms MongoServer) FindOne(query bson.D) (record []byte, err error) {
 
-	// establish connection with mongo backend
-	mongoCtx, cancel, client, err := ms.connect()
-	defer cancel()
-
-	if err != nil {
-		// log error for failing to connect
-		mongoLogger.Error().
-			Err(err).
-			Str("operation", "FindOne").
-			Msg("failed connection to mongo")
-
-		return
-	}
+    // create a new context for the operation
+    mongoCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
 
 	recordMap := make(map[string]interface{})
-	col := client.Database(ms.Database).Collection(ms.Collection)
+	col := ms.Client.Database(ms.Database).Collection(ms.Collection)
 	err = col.FindOne(mongoCtx, query).Decode(&recordMap)
 
 	if err != nil {
@@ -119,7 +114,7 @@ func (ms MongoServer) FindOne(query bson.D) (record []byte, err error) {
 	mongoLogger.Info().
 		Str("operation", "FindOne").
 		Interface("query", query).
-		Bytes("record", record).
+		Str("record", string(record)).
 		Msg("found one success")
 
 	return
@@ -127,21 +122,11 @@ func (ms MongoServer) FindOne(query bson.D) (record []byte, err error) {
 
 func (ms MongoServer) FindMany(query bson.D, results interface{}) (err error) {
 
-	// establish connection with mongo backend
-	mongoCtx, cancel, client, err := ms.connect()
-	defer cancel()
+    // create a new context for the operation
+    mongoCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
 
-	if err != nil {
-		// log error for failing to connect
-		mongoLogger.Error().
-			Err(err).
-			Str("operation", "FindMany").
-			Msg("failed connection to mongo")
-
-		return
-	}
-
-	col := client.Database(ms.Database).Collection(ms.Collection)
+	col := ms.Client.Database(ms.Database).Collection(ms.Collection)
 	cur, err := col.Find(mongoCtx, query)
 
 	if err != nil {
@@ -179,21 +164,11 @@ func (ms MongoServer) FindMany(query bson.D, results interface{}) (err error) {
 
 func (ms MongoServer) DeleteOne(query bson.D) (record map[string]interface{}, err error) {
 
-	// establish connection with mongo backend
-	mongoCtx, cancel, client, err := ms.connect()
-	defer cancel()
+    // create a new context for the operation
+    mongoCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
 
-	if err != nil {
-		// log error for failing to connect
-		mongoLogger.Error().
-			Err(err).
-			Str("operation", "DeleteOne").
-			Msg("failed connection to mongo")
-
-		return
-	}
-
-	col := client.Database(ms.Database).Collection(ms.Collection)
+	col := ms.Client.Database(ms.Database).Collection(ms.Collection)
 	err = col.FindOneAndDelete(mongoCtx, query).Decode(&record)
 
 	if err != nil {
@@ -218,19 +193,9 @@ func (ms MongoServer) DeleteOne(query bson.D) (record map[string]interface{}, er
 
 func (ms MongoServer) UpdateOne(query bson.D, update []byte) (record []byte, err error) {
 
-	// establish connection with mongo backend
-	mongoCtx, cancel, client, err := ms.connect()
-	defer cancel()
-
-	if err != nil {
-		// log error for failing to connect
-		mongoLogger.Error().
-			Err(err).
-			Str("operation", "UpdateOne").
-			Msg("failed connection to mongo")
-
-		return
-	}
+    // create a new context for the operation
+    mongoCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
 
 	// nestedUpdate converts to bson
 	nested, err := nestedUpdate(update)
@@ -247,8 +212,7 @@ func (ms MongoServer) UpdateOne(query bson.D, update []byte) (record []byte, err
 		return
 	}
 
-	col := client.Database(ms.Database).Collection(ms.Collection)
-
+	col := ms.Client.Database(ms.Database).Collection(ms.Collection)
 	opt := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
 	rec := make(map[string]interface{})

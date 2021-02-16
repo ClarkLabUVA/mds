@@ -17,6 +17,10 @@ import (
 
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
+
+    "context"
+    "time"
+    "go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 
@@ -24,10 +28,12 @@ var server identifier.Backend
 
 func main() {
 
+    var err error
+
 	// set server to defaults for local testing
 	server = identifier.Backend{
 		Stardog: identifier.StardogServer{
-			URI:      "http://localhost:5820",
+			URI:      "http://stardog:5820",
 			Password: "admin",
 			Username: "admin",
 			Database: "ors",
@@ -84,10 +90,55 @@ func main() {
 		).
 		Msg("initilization variables for server")
 
+    // Wait until stardog is available or 10 seconds have passed
+    func() {
+        timeout := time.After(10 * time.Second)
+        ticker := time.Tick(500 * time.Millisecond)
+        for {
+            select {
+            case <-timeout:
+                zlog.Fatal().Str("Error", "Failed to Ping Stardog").Msg("Failed to Contact Stardog")
+            case <-ticker: 
+                pingErr := server.Stardog.Ping()
+                if pingErr != nil {
+                    zlog.Error().Err(err).Str("Error", "Failed to Ping Stardog").Msg("Failed to Contact Stardog")
+                } else {
+                    return 
+                }
+            }
+        }
+    }()
+
+    // attempt to create database
 	server.Stardog.CreateDatabase(server.Stardog.Database)
 
-	r := mux.NewRouter().StrictSlash(false)
 
+    // attempt to connect and ping mongo server
+    clientContext := context.Background()
+    server.Mongo.Client, err = server.Mongo.Connect(context.Background())
+
+    if err != nil {
+        zlog.Fatal().
+            Err(err).
+            Str("Error", "Failed Connecting to Mongo Backend")
+    }
+
+    // defer cancelling the client
+    defer func() {
+        if server.Mongo.Client != nil {
+            server.Mongo.Client.Disconnect(clientContext)
+        }
+    }() 
+
+    // validate that the client works
+    if err = server.Mongo.Client.Ping(context.TODO(), readpref.Primary()); err != nil {
+        zlog.Fatal().
+            Err(err).
+            Str("Error", "Failed to ping Mongo instance")
+    }
+
+    // routing for application	
+    r := mux.NewRouter().StrictSlash(false)
 
 	r.HandleFunc("/ark:{prefix}", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {

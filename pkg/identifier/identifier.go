@@ -31,6 +31,21 @@ type Backend struct {
 	useStardog bool
 }
 
+//NewBackend initilizes a new backend with specified data, and preforms the required setup and database commands
+// for MDS to function
+func NewBackend() (b Backend, err error) {
+
+    // create mongo client ensure database access
+
+    // wait until ping is functional or timeout passes
+
+    // create stardog client
+
+    // wait until ping is functional or timeout passes
+
+    return
+}
+
 func (b *Backend) CreateNamespace(guid string, payload []byte) (err error) {
 
 	ns := make(map[string]interface{})

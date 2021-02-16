@@ -13,6 +13,7 @@ import (
 // CreateArkNamespaceHandler is the http handler for creating identifier namespaces
 func (b *Backend) CreateArkNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 
+    /*
 	// extract user from request context
 	var u User
 	contextUser := r.Context().Value("user")
@@ -23,6 +24,7 @@ func (b *Backend) CreateArkNamespaceHandler(w http.ResponseWriter, r *http.Reque
 		serveJSON(w, 403, map[string]interface{}{"error": "action not permitted", "message": "only admins may create ark namespaces"})
 		return 
 	}
+    */
 
 	// read in response from request
 	payload, err := ioutil.ReadAll(r.Body)
@@ -89,6 +91,7 @@ func (b *Backend) UpdateArkNamespaceHandler(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-Type", "application/json")
 
+    /*
 	// extract user from request context
 	var u User
 	contextUser := r.Context().Value("user")
@@ -99,6 +102,7 @@ func (b *Backend) UpdateArkNamespaceHandler(w http.ResponseWriter, r *http.Reque
 		serveJSON(w, 403, map[string]interface{}{"error": "action not permitted", "message": "only admins may create ark namespaces"})
 		return 
 	}
+    */
 
 
 	vars := mux.Vars(r)
@@ -147,9 +151,9 @@ func (b *Backend) ArkResolveHandler(w http.ResponseWriter, r *http.Request) {
 //ArkCreateHandler
 func (b *Backend) ArkCreateHandler(w http.ResponseWriter, r *http.Request) {
 
-
-	// extract user from request context
 	var u User
+    /*
+	// extract user from request context
 	var err error
 	contextUser := r.Context().Value("user")
 	u = contextUser.(User)
@@ -159,12 +163,14 @@ func (b *Backend) ArkCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return 
 	}
 
+    */
 
 	guid := strings.TrimPrefix(r.RequestURI, "/")
 
 	splitPath := strings.Split(guid, "/")
 	namespace := splitPath[0]
 
+    /*
 	// create resource in auth service
 	err = AuthCreateACL(guid, u)
 
@@ -173,6 +179,7 @@ func (b *Backend) ArkCreateHandler(w http.ResponseWriter, r *http.Request) {
 		serveJSON(w, 500, map[string]interface{}{"error": err.Error(), "message": "Error registering ACL for identifier"})
 		return
 	}
+    */
 
 	// read in response from request
 	bodyBytes, err := ioutil.ReadAll(r.Body)
@@ -208,8 +215,9 @@ func (b *Backend) ArkCreateHandler(w http.ResponseWriter, r *http.Request) {
 //ArkMintHandler
 func (b *Backend) ArkMintHandler(w http.ResponseWriter, r *http.Request) {
 
-	// extract user from request context
 	var u User
+    /*
+	// extract user from request context
 	contextUser := r.Context().Value("user")
 	u = contextUser.(User)
 
@@ -217,6 +225,7 @@ func (b *Backend) ArkMintHandler(w http.ResponseWriter, r *http.Request) {
 		serveJSON(w, 403, map[string]interface{}{"error": "action not permitted", "message": "must be a user or  may create ark identifiers"})
 		return 
 	}
+    */
 
 	// read in response from request
 	bodyBytes, err := ioutil.ReadAll(r.Body)
@@ -235,8 +244,10 @@ func (b *Backend) ArkMintHandler(w http.ResponseWriter, r *http.Request) {
 	// append to identifier
 	guid := "ark:" + vars["prefix"] + "/" + identifierUUID.String()
 
+    /*
 	// create resource in auth service
 	err = AuthCreateACL(guid, u)
+    */
 
 	// if error is found in the auth service
 	if err != nil {
@@ -274,6 +285,7 @@ func (b *Backend) ArkUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	guid := "ark:" + vars["prefix"] + "/" + vars["suffix"]
 
+    /*
 	// extract user from request context
 	var u User
 	contextUser := r.Context().Value("user")
@@ -293,6 +305,7 @@ func (b *Backend) ArkUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		serveJSON(w, 403, map[string]interface{}{"error": "user is unauthorized to preform this action"})
 		return
 	}
+    */
 
 
 	// read in response from request
@@ -330,6 +343,7 @@ func (b *Backend) ArkDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	guid := "ark:" + vars["prefix"] + "/" + vars["suffix"]
 	
+    /*
 	// extract user from request context
 	var u User
 	contextUser := r.Context().Value("user")
@@ -348,6 +362,7 @@ func (b *Backend) ArkDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		serveJSON(w, 403, map[string]interface{}{"error": "user is unauthorized to preform this action"})
 		return
 	}
+    */
 
 	identifier, err := b.DeleteIdentifier(guid)
 

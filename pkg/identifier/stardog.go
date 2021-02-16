@@ -24,6 +24,7 @@ var stardogLogger = zerolog.New(os.Stderr).With().Timestamp().Str("backend", "st
 var (
 	errFailedPost = errors.New("Failed Stardog Post")
 	errTXFailed   = errors.New("Transaction Failed")
+    errStardogPingFail = errors.New("Stardog Ping failed to return status 200")
 )
 
 var jsonLD = "application/ld+json"
@@ -34,6 +35,33 @@ type StardogServer struct {
 	Username      string
 	Database      string
 	ValidationURI string
+}
+
+// Ping simply checks the health of the stardog server
+func (s *StardogServer) Ping() (err error) {
+    url := s.URI + "/admin/healthcheck"
+    
+    req, err := http.NewRequest("GET", url, nil)
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		stardogLogger.Error().
+			Err(err).
+			Str("operation", "Ping").
+			Str("url", url).
+			Msg("failed to preform request")
+
+		return
+	}
+
+    if resp.StatusCode != 200 {
+        err = errStardogPingFail
+    }
+
+    return
+
+
 }
 
 // TODO: Fix Request Can't Find
