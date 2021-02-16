@@ -37,7 +37,6 @@ func main() {
 			Database: "ors",
 			Collection: "ids",
 		},
-
 	}
 
 	// if Environent Variables options are set, update backend server configuration
@@ -122,40 +121,88 @@ func main() {
 			}
 		}))
 
-	r.PathPrefix("/ark:{prefix}/{suffix}").Handler(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == "POST" {
-				server.ArkCreateHandler(w, r)
-				return
-			}
+	r.PathPrefix("/ark:{prefix}/{suffix}").Handler(
+		http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "POST" {
+					server.ArkCreateHandler(w, r)
+					return
+				}
 
-			if r.Method == "GET" {
-				server.ArkResolveHandler(w, r)
-				return
-			}
+				if r.Method == "GET" {
+					server.ArkResolveHandler(w, r)
+					return
+				}
 
-			if r.Method == "PUT" {
-				server.ArkUpdateHandler(w, r)
-				return
-			}
-			if r.Method == "DELETE" {
-				server.ArkDeleteHandler(w, r)
-				return
-			} else {
-				http.Error(w, "Method Not Allowed", 405)
-				return
-			}
-		}))
+				if r.Method == "PUT" {
+					server.ArkUpdateHandler(w, r)
+					return
+				}
+				if r.Method == "DELETE" {
+					server.ArkDeleteHandler(w, r)
+					return
+				} else {
+					http.Error(w, "Method Not Allowed", 405)
+					return
+				}
+			},
+		),
+	)
 
 	// resolve prefix for ARK syntax
-	r.PathPrefix("/ark:/{prefix}/{suffix}").Handler(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == "GET" {
-				server.ArkResolveHandler(w, r)
-				return
-			}
-		}))
+	r.PathPrefix("/ark:/{prefix}/{suffix}").Handler(
+		http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "POST" {
+					server.ArkCreateHandler(w, r)
+					return
+				}
 
+				if r.Method == "GET" {
+					server.ArkResolveHandler(w, r)
+					return
+				}
+
+				if r.Method == "PUT" {
+					server.ArkUpdateHandler(w, r)
+					return
+				}
+				if r.Method == "DELETE" {
+					server.ArkDeleteHandler(w, r)
+					return
+				} else {
+					http.Error(w, "Method Not Allowed", 405)
+					return
+				}
+			},
+		),
+	)
+
+
+	r.HandleFunc("/ark:/{prefix}", 
+		http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "POST" {
+					server.CreateArkNamespaceHandler(w, r)
+					return
+				}
+
+				if r.Method == "GET" {
+					server.GetArkNamespaceHandler(w, r)
+					return
+				}
+
+				if r.Method == "PUT" {
+					server.UpdateArkNamespaceHandler(w, r)
+					return
+				} else {
+					http.Error(w, "Method Not Allowed", 405)
+					return
+				}
+			},
+		),
+	)
+	
 	r.HandleFunc("/", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(200)
